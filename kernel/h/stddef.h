@@ -1,0 +1,13 @@
+#include <types.h>
+#include <video.h>
+#include <gdt.h>
+#include <idt.h>
+#include <isr.h>
+#include <irq.h>
+#include <timer.h>
+#include <multiboot.h>
+#include <vmmngr.h>
+#include <heapmngr.h>
+#include <kbd.h>
+#include <fat.h>
+#include <proc.h>
