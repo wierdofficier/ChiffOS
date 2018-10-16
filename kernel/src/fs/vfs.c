@@ -3,16 +3,6 @@
 #include <vfs.h>
 #include <kernel.h>
 
-/* vim: tabstop=4 shiftwidth=4 noexpandtab
- * This file is part of ToaruOS and is released under the terms
- * of the NCSA / University of Illinois License - see LICENSE.md
- * Copyright (C) 2011-2014 Kevin Lange
- * Copyright (C) 2014 Lioncash
- * Copyright (C) 2012 Tianyi Wang
- *
- * Virtual File System
- *
- */
 #include <system.h>
 #include <fs.h>
 #include <tree.h>

@@ -228,40 +228,40 @@ va_list args;
 	char *p;
 	static char printk_buf[81920];
 	static int log_level_unknown = 1;
-static char newbuf[8192];
+static char newbuf[81921];
 	va_start(args, fmt);
 //char buf[100] = {"\033[1;35mNOTICE\033[0m:"};
 
 
 	printed_len = vsnprintf( printk_buf, sizeof(printk_buf), fmt, args);
 
- strcpy(printk_buf+sizeof(printk_buf),"\n");
+ 
 va_end(args);
 
-		//sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf);
+		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf);
 
 if(serial_printing)
 {
 	if (fmt[strlen(newbuf)] == '\n') {
 
-		//serial_string(0x3F8, newbuf);
+		 serial_string(0x3F8, newbuf);
 		char buf2[1024];
 	
-	//	serial_string(0x3F8, newbuf);
+	 	serial_string(0x3F8, newbuf);
 	} else {
-	//	serial_string(0x3F8 , newbuf);
+	 	serial_string(0x3F8 , newbuf);
 	}
 }
 	
   if(GRAPHICS_ON == 1)
 {
-static char newbuf[4][8192];
+static char newbuf[4][81912];
 sprintf(newbuf[0] , "[%4d", gettickcount() );
  list3[0] =   newbuf[0];
 sprintf(newbuf[1] , "%s]", "[INFO]" );
  list3[1] =   newbuf[1];
  
-sprintf(newbuf[2] , "%s\0\n", printk_buf );
+sprintf(newbuf[2] , "%s", printk_buf  );
 
 list3[2] =   newbuf[2];
   puts_g( list3);

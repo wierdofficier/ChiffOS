@@ -323,7 +323,7 @@ void kmain(struct multiboot *mbp, u32 magic)
  	printk("[ok]\n");
 	_vesa_initialize();
  	init_graphics();
-	memset((void *)(uintptr_t )lfb_vid_memory,9168575, term_width * term_height * 12);
+	memset((void *)(uintptr_t )lfb_vid_memory, 0, term_width * term_height * 12);
  	printk("Initializing initrd... ");
  	//fs_root = install_initrd(initrd_location);
         printk("[ok]\n");
@@ -375,9 +375,9 @@ void kmain(struct multiboot *mbp, u32 magic)
 	vfs_mount_type(root_type, args_value("root"), "/");
   
 
-	char * boot_app = "/shell3";
-	if (args_present("shell3")) {
-		boot_app = args_value("shell3");
+	char * boot_app = "/bitmap";
+	if (args_present("bitmap")) {
+		boot_app = args_value("bitmap");
 	}
 
 	/* Prepare to run /bin/init */
@@ -390,15 +390,17 @@ void kmain(struct multiboot *mbp, u32 magic)
 	while (argv[argc]) {
 		argc++;
 	}
+
+
+	 system(argv[0], argc, argv); /* Run init */
+ DOTASKSWITCH=1;
  
-	system(argv[0], argc, argv); /* Run init */
- 
- 
- 	insert_current_task(current_task);
+ for(;;);
+ 	
 	init_netifs();
 	socketdemo();
 	//udelay(3);
-	DOTASKSWITCH=1;
+	
 for(;;);
 
 }

@@ -107,7 +107,7 @@ void _task_initialize(void)
 	//
  
 	scheduler_install();
-	//insert_current_task(current_task);
+	 insert_current_task(current_task);
 	list_insert(process_list, (void *)current_task);
 	 __asm__ __volatile__("sti");
 }

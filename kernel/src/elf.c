@@ -10,21 +10,22 @@
 #define PUSH(stack, type, item) stack -= sizeof(type); \
 *((type *) stack) = item
 extern list_t * process_list;  
+  task_t* new_task;
 void
 enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack) {
-	IRQ_OFF;
+	//IRQ_OFF;
 
-	set_kernel_stack(current_task->image.stack);
+	set_kernel_stack(new_task->image.stack);
 
 	PUSH(stack, uintptr_t, (uintptr_t)argv);
 	PUSH(stack, int, argc);
-
-	//enter_userspace(location, stack);
+  create_user_task(location, new_task,argc,argv);
+	// enter_userspace(location, stack);
 }
 
-
+ extern unsigned char  * lfb_vid_memory;
 extern struct page_directory * current_directory;
- 
+
 u32 heap_actual_global;
 u32 heap_global;
  
@@ -41,7 +42,7 @@ int exec_elf(char * path, fs_node_t * file, int argc, char ** argv, char ** env,
 	 
 	//assert(directory && "Could not allocate a new page directory!");
 	/* Spawn a new process from this one */
-	 
+	   
 	
 if (header.e_ident[0] != ELFMAG0 ||
 	    header.e_ident[1] != ELFMAG1 ||
@@ -54,7 +55,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 	printk("entry = %x \n", (uintptr_t)header.e_entry);
 	if (file->mask & 0x800) {
 		debug_print(WARNING, "setuid binary executed [%s, uid:%d]", file->name, file->uid);
-		current_task->user = file->uid;
+		new_task->user = file->uid;
 	}
 
 	for (uintptr_t x = 0; x < (uint32_t)header.e_phentsize * header.e_phnum; x += header.e_phentsize) {
@@ -71,7 +72,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 			char * args[nargc+1];
 			args[0] = "ld.so";
 			args[1] = "-e";
-			args[2] = strdup(current_task->name);
+			args[2] = strdup(new_task->name);
 			int j = 3;
 			for (int i = 0; i < argc; ++i, ++j) {
 				args[j] = argv[i];
@@ -102,8 +103,8 @@ if (header.e_ident[0] != ELFMAG0 ||
 		}
 	}
 
-	current_task->image.entry = base_addr;
-	current_task->image.size  = end_addr - base_addr;
+	new_task->image.entry = base_addr;
+	new_task->image.size  = end_addr - base_addr;
 
 	release_directory_for_exec(current_directory);
 	invalidate_page_tables();
@@ -136,9 +137,9 @@ if (header.e_ident[0] != ELFMAG0 ||
 		invalidate_tables_at(stack_pointer);
 	}
 	//__asm__ __volatile__("cli");
-	 task_t* new_task = valloc(sizeof(task_t));
+	
 
-	memset((task_t *)new_task, 0, sizeof(task_t));
+	//memset((task_t *)new_task, 0, sizeof(task_t));
 	new_task->id = pid++;
     new_task->esp = 0;
     new_task->eip = 0;
@@ -281,9 +282,10 @@ if (header.e_ident[0] != ELFMAG0 ||
 	/* Go go go */
  	printk("entry = %x \n", (uintptr_t)header.e_entry);
  
-	  create_user_task(entry, new_task,argc,argv);
-
-//enter_user_jmp(entry, argc, argv_, USER_STACK_TOP);
+ 	
+printk("lfb_vid_memory= %x \n", (uintptr_t)lfb_vid_memory);
+ 
+ enter_user_jmp(entry, argc, argv_, USER_STACK_TOP);
 	/* We should never reach this code */
 	return 0;
 }
@@ -384,8 +386,8 @@ int exec(
  
 	debug_print(WARNING, "First four bytes: %c%c%c%c", head[0], head[1], head[2], head[3]);
 
-	current_task->name = strdup(path);
-	gettimeofday((struct timeval *)&current_task->start, NULL);
+	new_task->name = strdup(path);
+	gettimeofday((struct timeval *)&new_task->start, NULL);
 
 	for (unsigned int i = 0; i < sizeof(fmts) / sizeof(exec_def_t); ++i) {
 		if (matches(fmts[i].bytes, head, fmts[i].match)) {
@@ -410,17 +412,19 @@ system(
 		argv_[j] =  valloc((strlen(argv[j]) + 1) * sizeof(char));
 		memcpy(argv_[j], argv[j], strlen(argv[j]) + 1);
 	}
+new_task = valloc(sizeof(task_t)); 
 	argv_[argc] = 0;
 	char * env[] = {NULL};
-	set_process_environment((task_t*)current_task, clone_directory(current_directory));
-	current_directory = current_task->thread.page_directory;
+	set_process_environment((task_t*)new_task, clone_directory(current_directory));
+	current_directory = new_task->thread.page_directory;
 	switch_page_directory(current_directory);
 
-	current_task->cmdline = argv_;
+	new_task->cmdline = argv_;
+
  	//load_elf(NULL,NULL,NULL,NULL,NULL,NULL);
 	  exec(path,argc,argv_,env);
 
-	debug_print(ERROR, "Failed to execute process!");
+	//debug_print(ERROR, "Failed to execute process!");
 	// exit(-1);
 	return -1;
 }

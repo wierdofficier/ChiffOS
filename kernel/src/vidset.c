@@ -471,7 +471,7 @@ struct disp_mode {
 	signed short y;
 	int set;
 };
-int write_string(char **pmessage);
+ 
 static void auto_scan_pci(unsigned int device, unsigned short  v, unsigned short  d, void * extra) {
 	struct disp_mode * mode = extra;
 	if (mode->set) return;
@@ -501,12 +501,7 @@ int GRAPHICS_ON = 0;
 			if (!mode.set) {
 				graphics_install_preset(x,y);
 			}
-	
  
-  char *list1[] = { "123", "abc", "XYZ" };
- char *list2[] = { "456", "abc", "XYZ" };
- write_string(list1);
- write_string(list2);
 
 //lfb_video_panic(msg);
 GRAPHICS_ON =1;
@@ -871,36 +866,36 @@ u32 i = 0;
 	{
 		//write_char(xx+1, yy+1, text[i++], 0x11440000);
 		if(g == 0)
-			write_char(xx, yy, text[g][i++], 0xdd880000);
+			write_char(xx, yy, text[g][i++], 0x11ffff00);
 		if(g == 1)
-			write_char(xx, yy, text[g][i++], 0xadadadad);
+			write_char(xx, yy, text[g][i++], 0x111ff166);
 		if(g == 2)
-			write_char(xx, yy, text[g][i++], 0x00000000);
+			write_char(xx, yy, text[g][i++], 0xffffffff);
 		if(g == 3)
 			write_char(xx, yy, text[g][i++], 0x00000000);		
-		xx += char_width;
+		
 			if(xx > term_width)
 			{
 				 yy += char_height;	
 			 	 xx = 0;
 			}	
 
-			//if(xx > (strlen(text[g]))*char_width  - (char_width*2) )
-			//	break;
+			 
+	xx += char_width;
 	}
+
 }
 yy += char_height;
 
 	if(yy > term_height)
 	{
-		if(strlen(text) *char_width > 1000)
-			return;
-		memset((void *)(uintptr_t )lfb_vid_memory,9168575, term_width * term_height * 12);
+ 
+		memset((void *)(uintptr_t )lfb_vid_memory,0, term_width * term_height * 12);
 
 		yy = 0;
 		
 	}
-		 term_scroll(4);
+		// term_scroll(4);
 }
  
 

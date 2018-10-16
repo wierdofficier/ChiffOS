@@ -285,7 +285,9 @@ if(r->int_no < 32)
 		//printk("CS =%x EIP=%x EFLAGS=%x USERESP=%x\n", r->cs, r->eip, r->eflags, r->useresp);
 		printk("INT=%02dd ERR_CODE=0x%x DS=%x\n", r->int_no, r->err_code, r->ds);
 		printk("\n");
-		
+		uint32_t faulting_address;
+	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
+	printk("faulting_address %x\n", faulting_address);
 	 for(;;);
 			
 	}
