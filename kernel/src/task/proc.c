@@ -201,15 +201,15 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	kernel_stack->eflags = eflags;
 	kernel_stack->cs = code_segment;
 	kernel_stack->eip = (u32)entry;
-	kernel_stack->err_code = 0;
-	kernel_stack->int_no = 0;
+	kernel_stack->err_code = argc;
+	kernel_stack->int_no = argc;
 	kernel_stack->eax = argc;
-	kernel_stack->ecx = (uintptr_t)argv;
-	kernel_stack->edx = 0;
-	kernel_stack->ebx = 0;
-	kernel_stack->ebp = 0;
-	kernel_stack->esi = 0;
-	kernel_stack->edi = 0;
+	kernel_stack->ecx = argc;
+	kernel_stack->edx = argc;
+	kernel_stack->ebx = argc;
+	kernel_stack->ebp =argc;
+	kernel_stack->esi = argc;
+	kernel_stack->edi = argc;
 
 	if(privilege == 3) data_segment = 0x23;
 		kernel_stack->ds = data_segment;
@@ -223,7 +223,7 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	
 	task_switching = true;
 	insert_current_task(new_task);
- list_insert(process_list,   new_task);
+ 	list_insert(process_list,   new_task);
 //make_process_ready(new_task);
 	__asm__ __volatile__("sti");	
 }

@@ -508,19 +508,22 @@ int readlink_fs(fs_node_t *node, char * buf, uint32_t size) {
 char *canonicalize_path(char *cwd, char *input) {
 	/* This is a stack-based canonicalizer; we use a list as a stack */
 	list_t *out = list_create();
-
+printk("cwd = %s :: input = %s\n",cwd,input);
 	/*
 	 * If we have a relative path, we need to canonicalize
 	 * the working directory and insert it into the stack.
 	 */
+
 	if (strlen(input) && input[0] != PATH_SEPARATOR) {
 		/* Make a copy of the working directory */
+
 		char *path = malloc((strlen(cwd) + 1) * sizeof(char));
 		memcpy(path, cwd, strlen(cwd) + 1);
 
 		/* Setup tokenizer */
 		char *pch;
 		char *save;
+
 		pch = strtok_r(path,PATH_SEPARATOR_STRING,&save);
 
 		/* Start tokenizing */
@@ -534,16 +537,16 @@ char *canonicalize_path(char *cwd, char *input) {
 		}
 		free(path);
 	}
-
+printk("cwd = %s :: input = %s\n",cwd,input);
 	/* Similarly, we need to push the elements from the new path */
 	char *path = malloc((strlen(input) + 1) * sizeof(char));
 	memcpy(path, input, strlen(input) + 1);
-
+printk("cwd = %s :: input = %s\n",cwd,input);
 	/* Initialize the tokenizer... */
 	char *pch;
 	char *save;
 	pch = strtok_r(path,PATH_SEPARATOR_STRING,&save);
-
+printk("cwd = %s :: input = %s\n",cwd,input);
 	/*
 	 * Tokenize the path, this time, taking care to properly
 	 * handle .. and . to represent up (stack pop) and current
@@ -867,17 +870,24 @@ fs_node_t *get_mount_point(char * path, unsigned int path_depth, char **outpath,
 	return last;
 }
 
-
+int first = 1;
 
 fs_node_t *kopen_recur(char *filename, uint32_t flags, uint32_t symlink_depth, char *relative_to) {
 	/* Simple sanity checks that we actually have a file system */
 	if (!filename) {
 		return NULL;
 	}
-debug_print(NOTICE, "kopen_recur(%s) 1", filename);
+char *path;
+//debug_print(NOTICE, "kopen_recur(%s) 1", filename);
 	/* Canonicalize the (potentially relative) path... */
-	char *path =filename;// canonicalize_path(relative_to, filename); //ändring
-debug_print(NOTICE, "kopen_recur(%s) 2", filename);
+	if(first == 1)	
+	{
+		path = filename;// canonicalize_path(relative_to, filename);
+		first =0 ;
+	}
+	else
+		path = canonicalize_path(relative_to, filename); //ändring
+//debug_print(NOTICE, "kopen_recur(%s) 2", filename);
 	/* And store the length once to save recalculations */
 	size_t path_len = strlen(path);
 
@@ -895,7 +905,7 @@ debug_print(NOTICE, "kopen_recur(%s) 2", filename);
 		/* And return the clone */
 		return root_clone;
 	}
-debug_print(NOTICE, "kopen_recur(%s) 3", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 3", filename);
 	/* Otherwise, we need to break the path up and start searching */
 	char *path_offset = path;
 	uint32_t path_depth = 0;
@@ -910,7 +920,7 @@ debug_print(NOTICE, "kopen_recur(%s) 3", filename);
 	/* Clean up */
 	path[path_len] = '\0';
 	path_offset = path + 1;
-debug_print(NOTICE, "kopen_recur(%s) 4", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 4", filename);
 	/*
 	 * At this point, the path is tokenized and path_offset points
 	 * to the first token (directory) and path_depth is the number
@@ -925,7 +935,7 @@ debug_print(NOTICE, "kopen_recur(%s) 4", filename);
 	fs_node_t *node_ptr = get_mount_point(path, path_depth, &path_offset, &depth);
 	debug_print(INFO, "path_offset: %s", path_offset);
 	debug_print(INFO, "depth: %d", depth);
-debug_print(NOTICE, "kopen_recur(%s) 5", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 5", filename);
 	if (!node_ptr) return NULL;
 
 	if (path_offset >= path+path_len) {
@@ -933,7 +943,7 @@ debug_print(NOTICE, "kopen_recur(%s) 5", filename);
 		open_fs(node_ptr, flags);
 		return node_ptr;
 	}
-debug_print(NOTICE, "kopen_recur(%s) 6", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 6", filename);
 	fs_node_t *node_next = NULL;
 	for (; depth < path_depth; ++depth) {
 		/* Search the active directory for the requested directory */
@@ -947,7 +957,7 @@ debug_print(NOTICE, "kopen_recur(%s) 6", filename);
 			return NULL;
 		}
 
-debug_print(NOTICE, "kopen_recur(%s) 7", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 7", filename);
 		/* 
 		 * This test is a little complicated, but we basically always resolve symlinks in the
 		 * of a path (like /home/symlink/file) even if O_NOFOLLOW and O_PATH are set. If we are
@@ -973,7 +983,7 @@ debug_print(NOTICE, "kopen_recur(%s) 7", filename);
 				free(node_ptr);
 				return NULL;
 			}
-debug_print(NOTICE, "kopen_recur(%s) 8", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 8", filename);
 			/* 
 			 * This may actually be big enough that we wouldn't want to allocate it on
 			 * the stack, especially considering this function is called recursively
@@ -994,7 +1004,7 @@ debug_print(NOTICE, "kopen_recur(%s) 8", filename);
 				free(node_ptr);
 				return NULL;
 			}
-debug_print(NOTICE, "kopen_recur(%s) 9", filename);
+//debug_print(NOTICE, "kopen_recur(%s) 9", filename);
 			fs_node_t * old_node_ptr = node_ptr;
 			/* Rebuild our path up to this point. This is hella hacky. */
 			char * relpath = malloc(path_len + 1);

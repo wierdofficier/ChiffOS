@@ -56,24 +56,20 @@
  typedef signed char int8_t ;
 typedef unsigned char uint8_t;
 
-
+typedef long int off_t;
+typedef unsigned short ino_t;
 struct dirent {
-	uint32_t d_ino;
-	uint16_t d_dev; // custom field, to allow a dirent to uniquely specify a file
-	uint16_t __pad;
-	uint16_t d_reclen;
-	unsigned char d_type;
-	unsigned char d_namlen;
-	char d_name[MAXNAMLEN];
+    ino_t          d_ino;       /* inode number */
+    off_t          d_off;       /* offset to the next dirent */
+    unsigned short d_reclen;    /* length of this record */
+    unsigned char  d_type;      /* type of file; not supported
+                                   by all file system types */
+    char           d_name[256]; /* filename */
 };
-typedef struct {
-    int dd_fd;		/* directory file */
-    int dd_loc;		/* position in buffer */
-    int dd_seek;
-    char *dd_buf;	/* buffer */
-    int dd_len;		/* buffer length */
-    int dd_size;	/* amount of data in buffer */
-//	_LOCK_RECURSIVE_T dd_lock;
+
+typedef struct DIR {
+	int fd;
+	int cur_entry;
 } DIR;
 #define _DIRENT_HAVE_D_NAMLEN
 #define _DIRENT_HAVE_D_RECLEN

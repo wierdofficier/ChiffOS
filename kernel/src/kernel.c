@@ -368,6 +368,7 @@ void kmain(struct multiboot *mbp, u32 magic)
 
 	tmpfs_initialize();
 	ext2_initialize();
+
 	char * root_type = "ext2";
 	if (args_present("root_type")) {
 		root_type = args_value("root_type");
@@ -397,7 +398,7 @@ void kmain(struct multiboot *mbp, u32 magic)
   	insert_current_task(current_task);
 	DOTASKSWITCH=1;
 
- 	//init_netifs();
+ 	 init_netifs();
  	//socketdemo();
 	//
 	

@@ -238,18 +238,18 @@ static char newbuf[81921];
  
 va_end(args);
 
-		//sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf);
+		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf);
 
 if(serial_printing)
 {
 	if (fmt[strlen(newbuf)] == '\n') {
 
-		//serial_string(0x3F8, newbuf);
+		 serial_string(0x3F8, newbuf);
 		char buf2[1024];
 	
-	//	serial_string(0x3F8, newbuf);
+	 	serial_string(0x3F8, newbuf);
 	} else {
-	//	serial_string(0x3F8 , newbuf);
+	 	serial_string(0x3F8 , newbuf);
 	}
 }
 	

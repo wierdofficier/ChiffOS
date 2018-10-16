@@ -376,6 +376,7 @@ int exec(
 		char ** env   /* Environmen variables */
 	) {
 	/* Open the file */
+
 	fs_node_t * file = kopen2(path,0);
 	if (!file) {
 		/* Command not found */

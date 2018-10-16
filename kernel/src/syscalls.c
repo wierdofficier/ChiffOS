@@ -719,7 +719,7 @@ void * sbrk(uintptr_t increment);
 &nop,
 &nop,
 &sys_seek,
-&sys_stat, 			//15
+&sys_lstat, 			//15
 &nop,
 &nop,
 &nop,
@@ -790,7 +790,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	//  printk("regs nr: %d\n",r->eax);
+	//   printk("regs nr: %d\n",r->eax);
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;
 

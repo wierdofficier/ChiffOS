@@ -475,7 +475,49 @@ void pipeHandler(char * args[]){
 		i++;	
 	}
 }
-			
+#include <stdint.h>
+
+typedef long int off_t;
+typedef   unsigned short ino_t;
+struct dirent {
+    ino_t          d_ino;       /* inode number */
+    off_t          d_off;       /* offset to the next dirent */
+    unsigned short d_reclen;    /* length of this record */
+    unsigned char  d_type;      /* type of file; not supported
+                                   by all file system types */
+    char           d_name[256]; /* filename */
+};
+
+typedef struct DIR {
+	int fd;
+	int cur_entry;
+} DIR;
+
+DIR * opendir (const char * dirname);
+int closedir (DIR * dir);
+struct dirent * readdir (DIR * dirp);
+int listall()
+{
+ struct dirent *de;  // Pointer for directory entry 
+  
+    // opendir() returns a pointer of DIR type.  
+    DIR *dr = opendir("."); 
+  
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory 
+    { 
+        printf("Could not open current directory" ); 
+        return 0; 
+    } 
+  
+    // Refer http://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html 
+    // for readdir() 
+    while ((de = readdir(dr)) != NULL) 
+            printf("%s\n", de->d_name); 
+  
+    closedir(dr);     
+    return 0; 
+
+}		
 /**
 * Method used to handle the commands entered via the standard input
 */ 
@@ -500,7 +542,7 @@ int commandHandler(char * args[]){
 		args_aux[j] = args[j];
 		j++;
 	}
-	
+	if(strcmp(args[0],"lsall") == 0) listall();
 	// 'exit' command quits the shell
 	if(strcmp(args[0],"exit") == 0) exit(0);
 	// 'pwd' command prints the current directory
