@@ -14,7 +14,7 @@ void render() {
 //	draw_fill(ctx, rgba(0,0,0,127));
 
 	int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, 1268);
-	cairo_surface_t * surface = cairo_image_surface_create_for_data(0xd0000000, CAIRO_FORMAT_ARGB32, 1268, 1024, stride);
+	cairo_surface_t * surface = cairo_image_surface_create_for_data(0xfd000000, CAIRO_FORMAT_ARGB32, 1268, 1024, stride);
 	cairo_t * cr = cairo_create(surface);
 
 	cairo_set_line_width (cr, 6);

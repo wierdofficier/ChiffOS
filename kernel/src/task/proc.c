@@ -41,7 +41,7 @@ void _task_initialize(void)
         current_task->next = 0;
         current_task->type = THREAD;
         current_task->priority = PRIO_HIGH;
-        current_task->time_to_run = 10;
+        current_task->time_to_run = 1;
         current_task->ready_to_run = 1;
 	current_task->wd_name = strdup("/");
 	current_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
@@ -107,9 +107,11 @@ void _task_initialize(void)
 	//
  
 	scheduler_install();
-	 insert_current_task(current_task);
-	list_insert(process_list, (void *)current_task);
+	// insert_current_task(current_task);
+	list_insert(process_list,  current_task);
+//make_process_ready(current_task);
 	 __asm__ __volatile__("sti");
+
 }
 
 u32 geteip()
@@ -119,7 +121,7 @@ u32 geteip()
 
 s32 getpid()
 {
-	return current_task->id;
+	return get_next_pid();
 }
 #define USER_STACK_START 0xbffff000
 void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u8 privilege, int priority,task_type type)
@@ -212,6 +214,8 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	
 	task_switching = true;
 	insert_current_task(new_task);
+ list_insert(process_list,   new_task);
+//make_process_ready(new_task);
 	__asm__ __volatile__("sti");	
 }
 
@@ -289,7 +293,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 
 	/* What the hey, let's also set the description on this one */
 	//new_task->description = strdup("[init]");
-	  list_insert(process_list, (void *)new_task);
+	 
 
 	new_task->fds = malloc(sizeof(fd_table_t));
 	new_task->wd_node = clone_fs(current_task->wd_node);
@@ -377,7 +381,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 	kernel_stack->eip = (u32)entry;
 	 kernel_stack->err_code = 0;
 	kernel_stack->int_no = 0;
-	kernel_stack->eax = argc;
+	kernel_stack->eax = 0;
 	kernel_stack->ecx = (uintptr_t)argv;
 	kernel_stack->edx = 0;
 	kernel_stack->ebx = 0;
@@ -402,7 +406,9 @@ new_task->syscall_registers = &r;
 	new_task->id = pid++;
 	
 	task_switching = true;
-	insert_current_task(new_task);
+	//insert_current_task(new_task);
+ //list_insert(process_list, (void *)new_task);
+ make_process_ready(new_task);
 	__asm__ __volatile__("sti");
 	
 }
@@ -436,9 +442,10 @@ void create_user_task_new(void (*thread)() )
 int DOTASKSWITCH = 0;
 void create_task_thread(void (*thread)(),int priority)
 {
-  DOTASKSWITCH = 1;
+ 
 	task_t* new_task = valloc(sizeof(task_t));
 	_get_task_stack(new_task,thread,0,0,0,priority,THREAD);
+ DOTASKSWITCH = 1;
 	//sleep2(40);
 }
 
@@ -448,6 +455,26 @@ void create_process(void (*process)(),task_type type,u8 privilege, int argc, cha
 	_get_task_stack(new_task,process,argc,(uintptr_t)argv,privilege,PRIO_HIGH, type);
 	//sleep2(40);	
 		 
+}
+uint8_t process_available(void) {
+	return (process_list->head != NULL);
+}
+task_t * next_ready_process(void) {
+	 if (!process_available()) {
+	 	return current_task;
+ 	}
+	if (process_list->head->owner != process_list) {
+		 debug_print(ERROR, "Erroneous process located in process queue: node 0x%x has owner 0x%x, but process_queue is 0x%x", process_queue->head, process_queue->head->owner, process_queue);
+
+		task_t * proc = process_list->head->value;
+
+		//debug_print(ERROR, "PID associated with this node is %d", proc->id);
+	}
+	node_t * np = list_dequeue(process_list);
+	 assert(np && "Ready queue is empty.");
+	task_t * next = np->value;
+
+	return next;
 }
 
 
@@ -462,9 +489,10 @@ struct regs *r = (struct regs*)esp;
 current_task->eip = r->eip;
 current_task->esp = esp;
  task_t* oldTask = current_task; 
-	current_task = get_current_task();
- 	
- 
+	//current_task = list_find(process_list, (void *)current_task);
+ 	current_task = next_ready_process();
+	 current_task = get_current_task();
+  //list_insert(process_list, (void *)new_task);
  if(oldTask == current_task) return esp; // No task switch because old==new
 
 if(current_task->priority == PRIO_LOW)
@@ -513,7 +541,9 @@ return current_task->esp;
 
 
 void sleep2(u32 milliseconds) 
-{
+{	
+	printk("sleep called \n");
+
 	const u32 start_ticks = gettickcount();
 	u32 ticks_to_wait = milliseconds / (1000 / TIMER_HZ);
 
@@ -524,6 +554,7 @@ void sleep2(u32 milliseconds)
 	current_task->wakeup_time = start_ticks + ticks_to_wait;
 
 	__asm__ __volatile__("int $0x20");
+ 
 }
 
 
@@ -567,6 +598,8 @@ void exit()
 
     __asm__ __volatile__("sti");
 	counter--;
+  list_delete(process_list,current_task);
+	current_task->id--;
 	task_switching = 1; 
 	switch_context();
 }
@@ -591,11 +624,11 @@ current_task->time_to_run = 0;
     }
     while (tmp_task->next);
 delete_current_task(current_task);
-  
+  list_delete(process_list,current_task);
     //free((void *)((u32)current_task->kernel_stack - KERNEL_STACK_SIZE)); // free kernelstack
     //free((void *)current_task);
 
-  
+  current_task->id--;
     
     __asm__ volatile("sti");
 counter--;
@@ -664,8 +697,23 @@ void kill(int pid) {
 #include <logging.h>
 static bitset_t pid_set;
 #include <shm.h>
-task_t * process_from_pid(int pid) {
- 
+
+uint8_t process_compare(void * proc_v, void * pid_v) {
+	pid_t pid = (*(pid_t *)pid_v);
+	task_t * proc = (task_t *)proc_v;
+
+	return (uint8_t)(proc->id == pid);
+}
+task_t * process_from_pid(pid_t pid) {
+	if (pid < 0) return NULL;
+
+	//spin_lock(tree_lock);
+	tree_node_t * entry = tree_find(process_tree,&pid,process_compare);
+	//spin_unlock(tree_lock);
+	if (entry) {
+		return (task_t *)entry->value;
+	}
+	return NULL;
 }
 #define MAX_PID 32768
 
@@ -732,7 +780,7 @@ uint32_t fork(void) {
 	 
 	printk("new_task->id= %d\n", new_task->id);
 	/* Return the child PID */
-	return 0;
+	return new_task->id;
 }
 
 static int wait_candidate(task_t * parent, int pid, int options, task_t * proc) {
@@ -809,7 +857,7 @@ void make_process_ready(task_t * proc) {
 		return;
 	}
 	//spin_lock(process_queue_lock);
-	list_append(process_queue, &proc->sched_node);
+	list_append(process_list, &proc->sched_node);
 	//spin_unlock(process_queue_lock);
 }
 
@@ -860,7 +908,7 @@ int waitpid(int pid, int * status, int options) {
 		if (!has_children) {
 			/* No valid children matching this description */
 			debug_print(INFO, "No children matching description.");
-			return -ECHILD;
+			return 0;
 		}
 
 		if (candidate) {
@@ -1074,13 +1122,13 @@ void set_process_environment(task_t * proc, page_directory_t * directory) {
 	proc->thread.page_directory = directory;
 }
 int process_wait_nodes( task_t * process,fs_node_t * nodes[], int timeout) {
-	 
+ 	 
 }
 
 //void make_process_ready(task_t * proc) {
 	 
 //}
-void switch_next() {}
+void switch_next() { }
 
 
 int process_awaken_from_fswait(task_t * process, int index) {
@@ -1088,8 +1136,9 @@ int process_awaken_from_fswait(task_t * process, int index) {
 }
 
 int process_is_ready(task_t * proc) {
-	 
+	return (proc->sched_node.owner != NULL);
 }
+
 
 void sleep_until(task_t * process, unsigned long seconds, unsigned long subseconds) {
 }

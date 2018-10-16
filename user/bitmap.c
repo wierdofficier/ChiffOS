@@ -34,8 +34,8 @@
 typedef unsigned char  byte;
 typedef unsigned short word;
 typedef unsigned long  dword;
-
-byte *VGA=(byte *)0xfD000000L;        /* this points to video memory. */
+unsigned char  * VGA = (unsigned char *)0xfD000000L;
+//byte *VGA=(byte *)0xfD0000000L;        /* this points to video memory. */
 word *my_clock=(word *)0x0000046C;    /* this points to the 18.2hz system
                                          clock. */
 
@@ -201,12 +201,16 @@ void main()
   for(i=0;i<SCREEN_HEIGHT;i++)
     memset(&VGA[SCREEN_WIDTH*i],i,SCREEN_WIDTH);
 
-  wait(25);
-
+  //wait(25);
+	printf("y= %d  :: x = %d\n", bmp.height,bmp.width);
+ 
   /* draw a tiled bitmap pattern on the left */
   for(y=0;y<=SCREEN_HEIGHT-bmp.height;y+=bmp.height)
     for(x=0;x<=(SCREEN_WIDTH)/2-bmp.width;x+=bmp.width)
+{
+	printf("x= %d \n", x);
       draw_bitmap(&bmp,x,y);
+}
 
   wait(25);
 

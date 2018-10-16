@@ -904,6 +904,6 @@ void _vesa_initialize()
 	printbuffer = (ringbuffer_t*)malloc_(sizeof(ringbuffer_t)*10000);
 	printbuffer->counter = 0;
 	printbuffer->read_ptr = printbuffer->data;	/*both pointers use data array to store its data*/
-    printbuffer->write_ptr = printbuffer->data;
+        printbuffer->write_ptr = printbuffer->data;
 	 
 }

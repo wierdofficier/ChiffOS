@@ -15,6 +15,7 @@
 #include <fs.h>
 #include <ext2.h>
 #include <logging.h>
+
 uint32_t fork(void);
 typedef unsigned int user_t;
  uint32_t read_ext2(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer);
@@ -519,7 +520,7 @@ int stdio_read__(int fd, void *buf, size_t length) {
 }
 static int sys_read(int fd, char * ptr, int len) {
  
- printk("fd %d :: len = %d\n",fd,len);
+ //printk("fd %d :: len = %d\n",fd,len);
 if(fd == 0)
  return stdio_read__(fd, ptr,len);
  
@@ -577,6 +578,7 @@ static int sys_close(int fd) {
 }
 static int sys_readdir(int fd, int index, struct dirent * entry) {
 	if (FD_CHECK(fd)) {
+
 		PTR_VALIDATE(entry);
 		struct dirent * kentry = readdir_fs(FD_ENTRY(fd), (uint32_t)index);
 		if (kentry) {
@@ -683,6 +685,7 @@ int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, st
 int fcntl(int s, int cmd, int val);
 int shutdown(int socket, int how);
 int listen(int s, int backlog);
+void sleep2(u32 milliseconds);
 unsigned int ipaddr_addr(const char *cp);
 
 void * sbrk(uintptr_t increment);
@@ -734,7 +737,7 @@ void * sbrk(uintptr_t increment);
 &nop,
 &nop,
 &nop,
-&nop,
+&sleep2,
 &sys_ioctl,
 &sys_access,
 &nop,
@@ -774,7 +777,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	 printk("regs nr: %d\n",r->eax);
+	  printk("regs nr: %d\n",r->eax);
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;
 

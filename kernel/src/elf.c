@@ -215,7 +215,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 
 	/* What the hey, let's also set the description on this one */
 	//new_task->description = strdup("[init]");
-	  list_insert(process_list, (void *)new_task);
+	
 	/* Collect arguments */
 	int envc = 0;
 	for (envc = 0; env[envc] != NULL; ++envc);
@@ -281,8 +281,8 @@ if (header.e_ident[0] != ELFMAG0 ||
  
 	/* Go go go */
  	printk("entry = %x \n", (uintptr_t)header.e_entry);
- 
- 	
+   list_insert(process_list, (void *)new_task);
+ 	make_process_ready(new_task);
 printk("lfb_vid_memory= %x \n", (uintptr_t)lfb_vid_memory);
  
  enter_user_jmp(entry, argc, argv_, USER_STACK_TOP);

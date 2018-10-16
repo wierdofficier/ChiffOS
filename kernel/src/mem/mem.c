@@ -223,7 +223,7 @@ uint32_t first_frame(void) {
 		}
 	}
 
-	debug_print(CRITICAL, "System claims to be out of usable memory, which means we probably overwrote the page frames.\033[0m");
+	//debug_print(CRITICAL, "System claims to be out of usable memory, which means we probably overwrote the page frames.\033[0m");
 
 	if (debug_video_crash) {
 		char * msgs[] = {"Out of memory.", NULL};
@@ -627,7 +627,7 @@ void * sbrk(uintptr_t increment) {
 	uintptr_t address = heap_end;
 
 	if (heap_end + increment > kernel_heap_alloc_point) {
-		debug_print(INFO, "Hit the end of available kernel heap, going to allocate more (at 0x%x, want to be at 0x%x)", heap_end, heap_end + increment);
+	//	debug_print(INFO, "Hit the end of available kernel heap, going to allocate more (at 0x%x, want to be at 0x%x)", heap_end, heap_end + increment);
 		for (uintptr_t i = heap_end; i < heap_end + increment; i += 0x1000) {
 			//debug_print(INFO, "Allocating frame at 0x%x...", i);
 			page_t * page = get_page(i, 0, kernel_directory);

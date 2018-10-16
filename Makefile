@@ -23,11 +23,15 @@ USERSPACEPROG := $(shell find user/ -maxdepth 2 -name 'Makefile' -exec dirname {
 
 .s.o:
 	nasm $(NASMFLAGS) $<
-all: $(OBJFILES) link
-					
+ 	
+all:	$(OBJFILES) link
+	
+	
+     					
 link:
-	$(LD) $(LDFLAGS) -o KERNEL $(OBJFILES)  asm/task.o asm/user.o   
-	qemu-system-i386 -sdl -no-frame -k en-us -m 2024 -vga std -rtc base=localtime -net nic,model=rtl8139 -net user -net dump -kernel KERNEL    -serial   		stdio -append "vid=qemu,,1280,,720 logtoserial=1 root=/dev/hda" -enable-kvm
+	$(CC) -c ./asm/task.S ./asm/user.S
+	$(LD) $(LDFLAGS) -o KERNEL $(OBJFILES)  task.o user.o   
+	qemu-system-i386 -sdl -no-frame -k en-us -m 2024 -vga std -rtc base=localtime -net nic,model=rtl8139 -net user -net dump -kernel KERNEL  -hda epzordiun-disk.img   -serial stdio -append "vid=qemu,,1280,,720 logtoserial=1 root=/dev/hda"    
  
 clean:
 	-$(RM) $(wildcard $(OBJFILES))
