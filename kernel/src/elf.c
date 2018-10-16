@@ -10,9 +10,9 @@
 #define PUSH(stack, type, item) stack -= sizeof(type); \
 *((type *) stack) = item
 extern list_t * process_list;  
-  task_t* new_task;
+  task_t* new_task_1;
 void
-enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack) {
+enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack,task_t * new_task) {
 	//IRQ_OFF;
 
 	set_kernel_stack(new_task->image.stack);
@@ -35,9 +35,9 @@ extern tree_t * process_tree;
 #define KERNEL_STACK_SIZE  4096
 extern int DOTASKSWITCH;
  volatile task_t * copytask;
-int exec_elf(char * path, fs_node_t * file, int argc, char ** argv, char ** env, int interp) {
+int exec_elf(char * path, fs_node_t * file, int argc, char ** argv, char ** env, int interp,task_t * new_task) {
 	Elf32_Header header;
-
+ 
 	read_fs(file, 0, sizeof(Elf32_Header), (uint8_t *)&header);
 	 
 	//assert(directory && "Could not allocate a new page directory!");
@@ -82,7 +82,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 			fs_node_t * file = kopen("/lib/ld.so",0);
 			if (!file) return -1;
 
-			return exec_elf(NULL, file, nargc, args, env, 1);
+			return exec_elf(NULL, file, nargc, args, env, 1,new_task);
 		}
 	}
 
@@ -281,11 +281,11 @@ if (header.e_ident[0] != ELFMAG0 ||
  
 	/* Go go go */
  	printk("entry = %x \n", (uintptr_t)header.e_entry);
-   list_insert(process_list, (void *)new_task);
- 	make_process_ready(new_task);
+   //list_insert(process_list, (void *)new_task);
+ 	//make_process_ready(new_task);
 printk("lfb_vid_memory= %x \n", (uintptr_t)lfb_vid_memory);
  
- enter_user_jmp(entry, argc, argv_, USER_STACK_TOP);
+ enter_user_jmp(entry, argc, argv_, USER_STACK_TOP,new_task);
 	/* We should never reach this code */
 	return 0;
 }
@@ -336,7 +336,7 @@ int exec_shebang(char * path, fs_node_t * file, int argc, char ** argv, char ** 
 }
 
 /* Consider exposing this and making it a list so it can be extended ... */
-typedef int (*exec_func)(char * path, fs_node_t * file, int argc, char ** argv, char ** env, int interp);
+typedef int (*exec_func)(char * path, fs_node_t * file, int argc, char ** argv, char ** env, int interp, task_t * new_task);
 typedef struct {
 	exec_func func;
 	unsigned char bytes[4];
@@ -366,7 +366,9 @@ static int matches(unsigned char * a, unsigned char * b, unsigned int len) {
  * @param argc Number of arguments (because I'm not counting for you)
  * @param argv Pointer to a string of arguments
  */
+int init_once = 1;
 extern fs_node_t * fnodeGLOBAL;
+task_t * new_task__;
 int exec(
 		char *  path, /* Path to the executable to run */
 		int     argc, /* Argument count (ie, /bin/echo hello world = 3) */
@@ -379,6 +381,18 @@ int exec(
 		/* Command not found */
 		return -ENOENT;
 	}
+if(init_once == 0)
+	{
+		new_task__ = valloc(sizeof(task_t));
+			new_task__->name = strdup(path);
+	gettimeofday((struct timeval *)&new_task__->start, NULL);
+}
+else
+{	new_task_1 = valloc(sizeof(task_t));
+			new_task_1->name = strdup(path);
+	gettimeofday((struct timeval *)&new_task_1->start, NULL);
+
+}
 
 	/* Read four bytes of the file */
 	unsigned char head[4];
@@ -386,13 +400,21 @@ int exec(
  
 	debug_print(WARNING, "First four bytes: %c%c%c%c", head[0], head[1], head[2], head[3]);
 
-	new_task->name = strdup(path);
-	gettimeofday((struct timeval *)&new_task->start, NULL);
+
 
 	for (unsigned int i = 0; i < sizeof(fmts) / sizeof(exec_def_t); ++i) {
 		if (matches(fmts[i].bytes, head, fmts[i].match)) {
 			debug_print(WARNING, "Matched executor: %s", fmts[i].name);
-			return fmts[i].func(path, file, argc, argv, env, 0);
+			if(init_once == 0)
+			{	
+				return fmts[i].func(path, file, argc, argv, env, 0,new_task__);
+			}
+			else
+			{
+				init_once = 0;
+				return fmts[i].func(path, file, argc, argv, env, 0,new_task_1);	
+
+			}
 		}
 	}
 
@@ -412,14 +434,14 @@ system(
 		argv_[j] =  valloc((strlen(argv[j]) + 1) * sizeof(char));
 		memcpy(argv_[j], argv[j], strlen(argv[j]) + 1);
 	}
-new_task = valloc(sizeof(task_t)); 
+	new_task_1 = valloc(sizeof(task_t));
 	argv_[argc] = 0;
 	char * env[] = {NULL};
-	set_process_environment((task_t*)new_task, clone_directory(current_directory));
-	current_directory = new_task->thread.page_directory;
+	set_process_environment((task_t*)new_task_1, clone_directory(current_directory));
+	current_directory = new_task_1->thread.page_directory;
 	switch_page_directory(current_directory);
 
-	new_task->cmdline = argv_;
+	new_task_1->cmdline = argv_;
 
  	//load_elf(NULL,NULL,NULL,NULL,NULL,NULL);
 	  exec(path,argc,argv_,env);

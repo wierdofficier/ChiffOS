@@ -329,7 +329,7 @@ static int sys_fswait_timeout(int c, int fds[], int timeout) {
 }
 
   int sys_write(int fd, char * ptr, int len) {
-  printk("%s\n",ptr );
+  printk("%s",ptr );
 	if (FD_CHECK(fd)) {
 		PTR_VALIDATE(ptr);
 		fs_node_t * node = FD_ENTRY(fd);
@@ -462,10 +462,13 @@ u8 getchar();
 static int sys_getuid(void) {
 	return current_task->user;
 }
-
+extern int yy;
+extern int xxx;
+extern unsigned short char_width;
+ int USING_STDIO = 0;
 int stdio_read__(int fd, void *buf, size_t length) {
 	 
-
+USING_STDIO = 1;
 	char *p = (char *)buf;
 
 	if (fd != 0) {
@@ -473,20 +476,26 @@ int stdio_read__(int fd, void *buf, size_t length) {
 	}
 
 	int ret = 0;
+int n = 0;
 	while (p < (char *)buf + length - 1 /* NULL termination */) {
 		char c = getchar();
 
 		if (c >= ' ' || c == '\n') {
-			putch(c); // echo to screen
-			update_cursor();
+			n+=char_width;
+			write_char(xxx+n, yy, c, 0x11ffff00);
+			 
+			//putch(c); // echo to screen
+			//update_cursor();
 		}
 		else if (c == '\b') {
 			if (p > (char *)buf) {
 				p--;
-				putch(c);
-				putch(' ');
-				putch(c);
-				update_cursor();
+				n+=char_width;
+				write_char(xxx+n, yy, c, 0x11ffff00);
+			//	putch(c);
+			//	putch(' ');
+			//	putch(c);
+				//update_cursor();
 				ret--;
 			}
 		}
@@ -495,8 +504,8 @@ int stdio_read__(int fd, void *buf, size_t length) {
 			if (ret > 0)
 				continue;
 			else {
-				putch('^');
-				putch('D');
+				//putch('^');
+				//putch('D');
 				return 0;
 			}
 		}
@@ -519,10 +528,13 @@ int stdio_read__(int fd, void *buf, size_t length) {
 	return ret;
 }
 static int sys_read(int fd, char * ptr, int len) {
- 
- //printk("fd %d :: len = %d\n",fd,len);
+ //puts_g( ptr);
+ //
 if(fd == 0)
- return stdio_read__(fd, ptr,len);
+{
+ 	int ret = stdio_read__(fd, ptr,len);
+	return ret;
+}
  
 	if (FD_CHECK(fd)) {
 		PTR_VALIDATE(ptr);
@@ -645,8 +657,9 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 		memcpy(argv_[j], argv[j], strlen(argv[j]) + 1);
 	}
 	argv_[argc] = 0;
+ 
 	char ** envp_;
-	if (envp && envc) {
+	/*if (envp && envc) {
 		envp_ = malloc(sizeof(char *) * (envc + 1));
 		for (int j = 0; j < envc; ++j) {
 			envp_[j] = malloc((strlen(envp[j]) + 1) * sizeof(char));
@@ -656,7 +669,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 	} else {
 		envp_ = malloc(sizeof(char *));
 		envp_[0] = NULL;
-	}
+	}*/
 	debug_print(INFO,"Releasing all shmem regions...");
 	 shm_release_all((task_t *)current_task);
 
@@ -664,7 +677,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 
 	debug_print(INFO,"Executing...");
 	/* Discard envp */
-	exec((char *)filename, argc, (char **)argv_, (char **)envp_);
+	exec((char *)filename, argc, (char **)argv_, (char **)NULL/*envp_*/);
 	return -1;
 }
  typedef unsigned int socklen_t;
@@ -777,7 +790,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	  printk("regs nr: %d\n",r->eax);
+	//  printk("regs nr: %d\n",r->eax);
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;
 

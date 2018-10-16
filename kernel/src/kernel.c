@@ -397,8 +397,8 @@ void kmain(struct multiboot *mbp, u32 magic)
   	insert_current_task(current_task);
 	DOTASKSWITCH=1;
 
- 	init_netifs();
- 	socketdemo();
+ 	//init_netifs();
+ 	//socketdemo();
 	//
 	
 for(;;);

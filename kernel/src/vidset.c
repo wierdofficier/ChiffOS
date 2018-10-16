@@ -853,6 +853,8 @@ void put_dec_g(u32 n)
    write_char(0, yy, c2, 0x3344ffff);
 
 }
+int xxx;
+extern int USING_STDIO;
 void puts_g(const char **text)
 {
 	
@@ -861,6 +863,7 @@ int num_entries = 3;
 for(int g = 0 ; g < num_entries; g++)
  {
 u32 i = 0;
+
 
 	while(i < strlen(text[g]))
 	{
@@ -881,7 +884,11 @@ u32 i = 0;
 			}	
 
 			 
-	xx += char_width;
+	 xx += char_width;
+	 
+	xxx =xx;
+	 
+	
 	}
 
 }

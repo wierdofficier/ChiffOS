@@ -119,12 +119,19 @@ void init(){
  * Method used to print the welcome screen of our shell
  */
 void welcomeScreen(){
-        printf("\n\t============================================\n");
-        printf("\t               Simple C Shell\n");
-        printf("\t--------------------------------------------\n");
-        printf("\t             Licensed under GPLv3:\n");
-        printf("\t============================================\n");
-        printf("\n\n");
+      //  printf("\n\t============================================\n");
+      //  printf("\t               Simple C Shell\n");
+     //   printf("\t--------------------------------------------\n");
+    //    printf("\t             Licensed under GPLv3:\n");
+     //   printf("\t============================================\n");
+     //   printf("\n\n");
+}
+void prompt(){
+ 
+	char hostn[1204] = "";
+	 gethostname(hostn, sizeof(hostn));
+printf("user@%s %s > ", hostn, getcwd(currentDirectory, 1024));
+        printf("\n");
 }
 
 /**
@@ -162,8 +169,8 @@ void signalHandler_int(int p){
 void shellPrompt(){
 	// We print the prompt in the form "<user>@<host> <cwd> >"
 	char hostn[1204] = "";
-	//gethostname(hostn, sizeof(hostn));
-	printf("%s@%s %s > ",  "TEST", hostn, getcwd(currentDirectory, 1024));
+	 gethostname(hostn, sizeof(hostn));
+	printf("%s@%s %s > ",  hostn, hostn, getcwd(currentDirectory, 1024));
 }
 
 /**
@@ -248,33 +255,32 @@ int manageEnviron(char * args[], int option){
 void launchProg(char **args, int background){	 
 	 int err = -1;
 	 
-	 if((pid=fork())==-1){
-		 printf("Child process could not be created\n");
-		 return;
-	 }
+	  
 	 // pid == 0 implies the following code is related to the child process
-	if(pid==0){
+ 
 		// We set the child to ignore SIGINT signals (we want the parent
 		// process to handle them with signalHandler_int)	
-		signal(SIGINT, SIG_IGN);
+	//	signal(SIGINT, SIG_IGN);
 		
 		// We set parent=<pathname>/simple-c-shell as an environment variable
 		// for the child
-		setenv("parent",getcwd(currentDirectory, 1024),1);	
+		//setenv("parent",getcwd(currentDirectory, 1024),1);	
 		
 		// If we launch non-existing commands we end the process
-		if (execvp(args[0],args)==err){
+//if(args[1] != NULL)
+// printf("Process creates with args: %s\n",args[1]);
+		if (execve (args[0],args,0)==err){
 			printf("Command not found");
-			kill(getpid(),SIGTERM);
+			//kill(getpid(),SIGTERM);
 		}
-	 }
+	  
 	 
 	 // The following will be executed by the parent
 	 
 	 // If the process is not requested to be in background, we wait for
 	 // the child to finish.
 	 if (background == 0){
-		 waitpid(pid,NULL,0);
+		// waitpid(pid,NULL,0);
 	 }else{
 		 // In order to create a background process, the current process
 		 // should just skip the call to wait. The SIGCHILD handler
@@ -608,6 +614,32 @@ return 1;
 /**
 * Main method of our shell
 */ 
+
+#define MAX_LINE_LENGTH 255 
+
+/* Retrieves a line of text from the stream provided
+ * and places it into @buf until a new line character is
+ * reached or the number of characters read is > @size - 1.
+ * This function will null-terminate the provided buffer.
+ *
+ * @param[in] -- stream -- the stream
+ * @param[in] -- buf -- a buffer big enough for @size chars.
+ * @param[in] -- size -- the maximum number of chars to read (must
+ *    include room for a null terminator
+ * @return -- the number of characters read from the stream.
+ */
+size_t getline(FILE *stream, char *buf, size_t size)
+{
+    size_t count = 0;
+    char c;
+    while ((c = (char)getc(stream)) != '\n' && count < size - 1) {
+ 
+        buf[count++] = c;
+    }
+    buf[count] = '\0';
+    return count;
+}
+
 int main(int argc, char *argv[], char ** envp) {
 	char line[MAXLINE]; // buffer for the user input
 	char * tokens[LIMIT]; // array for the different tokens in the command
@@ -633,7 +665,7 @@ int main(int argc, char *argv[], char ** envp) {
 	// will be printed
 	while(TRUE){
 		// We print the shell prompt if necessary
-	  shellPrompt();
+	//  shellPrompt();
 
 		no_reprint_prmpt = 0;
 		
@@ -641,8 +673,14 @@ int main(int argc, char *argv[], char ** envp) {
 		memset ( line, '\0', MAXLINE );
 
 		// We wait for user input
-		fgets(line, MAXLINE, stdin);
-	
+		char hostn[1204] = "";
+	 gethostname(hostn, sizeof(hostn));
+printf("user@%s %s > ", hostn, getcwd(currentDirectory, 1024));
+
+		 fgets(line, MAXLINE, stdin);
+		// getline(stdin,line,MAXLINE);
+		 
+printf("\n");
 		// If nothing is written, the loop is executed again
 		if((tokens[0] = strtok(line," \n\t")) == NULL) continue;
 		

@@ -8,6 +8,15 @@
 #include <elf.h>
 #include <fat.h>
 #include <timer.h>
+
+#include <fs.h>
+#include <system.h>
+#include <process.h>
+#include <tree.h>
+#include <list.h>
+#include "../bitset.h"
+#include <logging.h>
+static bitset_t pid_set;
 int IdleTask(void);
 volatile task_t *current_task;
 volatile task_t *ready_queue;
@@ -50,11 +59,11 @@ void _task_initialize(void)
 	/* Allocate space for a new process */
 	 
 	/* Set it as the root process */
-	tree_set_root(process_tree, (void *)current_task);
+	tree_set_root(process_list, (void *)current_task);
 	/* Set its tree entry pointer so we can keep track
 	 * of the process' entry in the process tree. */
-	current_task->tree_entry = process_tree->root;
-	current_task->id      = 1;       /* Init is PID 1 */
+	//current_task->tree_entry = process_list->root;
+	current_task->id      = 0;       /* Init is PID 1 */
 	current_task->group   = 0;
 	current_task->name    = strdup("init");  /* Um, duh. */
 	current_task->cmdline = NULL;
@@ -121,7 +130,7 @@ u32 geteip()
 
 s32 getpid()
 {
-	return get_next_pid();
+	return current_task->id;
 }
 #define USER_STACK_START 0xbffff000
 void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u8 privilege, int priority,task_type type)
@@ -235,10 +244,10 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
         new_task->ready_to_run = 1;
 	new_task->wd_name = strdup("/");
 	 
-	tree_set_root(process_tree, (void *)new_task);
+	//tree_set_root(process_list, (void *)new_task);
 	/* Set its tree entry pointer so we can keep track
 	 * of the process' entry in the process tree. */
-	new_task->tree_entry = process_tree->root;
+	//new_task->tree_entry = process_list->root;
 	new_task->id      = 1;       /* Init is PID 1 */
 	new_task->group   = 0;
 	new_task->name    = strdup("init");  /* Um, duh. */
@@ -381,7 +390,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 	kernel_stack->eip = (u32)entry;
 	 kernel_stack->err_code = 0;
 	kernel_stack->int_no = 0;
-	kernel_stack->eax = 0;
+	kernel_stack->eax = current_task->syscall_registers->eax;
 	kernel_stack->ecx = (uintptr_t)argv;
 	kernel_stack->edx = 0;
 	kernel_stack->ebx = 0;
@@ -400,7 +409,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 
 struct regs r;
 
-	memcpy(&r, current_task->syscall_registers, sizeof(struct regs));
+	memcpy(&r, new_task->syscall_registers, sizeof(struct regs));
 new_task->syscall_registers = &r;
 	new_task->esp = (u32)new_task->syscall_registers; 
 	new_task->id = pid++;
@@ -490,7 +499,7 @@ current_task->eip = r->eip;
 current_task->esp = esp;
  task_t* oldTask = current_task; 
 	//current_task = list_find(process_list, (void *)current_task);
- 	current_task = next_ready_process();
+ 	// current_task = next_ready_process();
 	 current_task = get_current_task();
   //list_insert(process_list, (void *)new_task);
  if(oldTask == current_task) return esp; // No task switch because old==new
@@ -543,7 +552,7 @@ return current_task->esp;
 void sleep2(u32 milliseconds) 
 {	
 	printk("sleep called \n");
-
+milliseconds = milliseconds*1000;//
 	const u32 start_ticks = gettickcount();
 	u32 ticks_to_wait = milliseconds / (1000 / TIMER_HZ);
 
@@ -568,12 +577,86 @@ void switch_context()
  	__asm__ volatile("int $0x20");
  	}
  	}
- 
 
 
+ void debug_print_process_tree_node(tree_node_t * node, size_t height) {
+	/* End recursion on a blank entry */
+	if (!node) return;
+	char * tmp = malloc(512);
+	memset(tmp, 0, 512);
+	char * c = tmp;
+	/* Indent output */
+	for (uint32_t i = 0; i < height; ++i) {
+		c += sprintf(c, "  ");
+	}
+	/* Get the current process */
+	task_t * proc = (task_t *)node->value;
+	/* Print the process name */
+	c += sprintf(c, "%d.%d %s", proc->group ? proc->group : proc->id, proc->id, proc->name);
+	//if (proc->description) {
+		/* And, if it has one, its description */
+	//	c += sprintf(c, " %s", proc->description);
+	//}
+	if (proc->finished) {
+		c += sprintf(c, " [zombie]");
+	}
+	/* Linefeed */
+	debug_print(NOTICE, "%s", tmp);
+	free(tmp);
+	foreach(child, node->children) {
+		/* Recursively print the children */
+		debug_print_process_tree_node(child->value, height + 1);
+	}
+}
 
+void debug_print_process_tree(void) {
+	debug_print_process_tree_node(process_tree->root, 0);
+}
+
+void delete_process(task_t * proc) {
+	tree_node_t * entry = proc->tree_entry;
+
+	/* The process must exist in the tree, or the client is at fault */
+	if (!entry) return;
+
+	/* We can not remove the root, which is an error anyway */
+	assert((entry != process_tree->root) && "Attempted to kill init.");
+
+	if (process_tree->root == entry) {
+		/* We are init, don't even bother. */
+		return;
+	}
+
+	/* Remove the entry. */
+	//spin_lock(tree_lock);
+	/* Reparent everyone below me to init */
+	int has_children = entry->children->length;
+	tree_remove_reparent_root(process_tree, entry);
+	list_delete(process_list, list_find(process_list, proc));
+	//spin_unlock(tree_lock);
+
+	if (has_children) {
+		task_t * init = process_tree->root->value;
+		wakeup_queue(init->wait_queue);
+	}
+
+	bitset_clear(&pid_set, proc->id);
+
+	/* Uh... */
+	free(proc);
+}
+
+void reap_process(task_t * proc) {
+	debug_print(INFO, "Reaping process %d; mem before = %d", proc->id, memory_use());
+	//free(proc->name);
+	debug_print(INFO, "Reaped  process %d; mem after = %d", proc->id, memory_use());
+exit();
+	//delete_process(proc);
+	//debug_print_process_tree();
+}
 void exit()
 {
+//task_switching = 0;
     __asm__ __volatile__("cli");
 	current_task->priority = PRIO_DEAD;
 	current_task->time_to_run = 0;
@@ -598,19 +681,23 @@ void exit()
 
     __asm__ __volatile__("sti");
 	counter--;
-  list_delete(process_list,current_task);
-	current_task->id--;
-	task_switching = 1; 
-	switch_context();
+  //list_delete(process_list,current_task);
+////	bitset_clear(&pid_set, current_task->id);
+	//task_switching = 1; 
+	//;
+  //reap_process(current_task);
+task_switching = 1;
+switch_context();
 }
 
 void _exit(int status)
 {
-    __asm__ volatile("cli");
- current_task->priority = PRIO_DEAD;
-current_task->time_to_run = 0;
-     current_task->ready_to_run = 0;
-      task_t* tmp_task = (task_t*)ready_queue;
+ task_switching = 0;
+    __asm__ __volatile__("cli");
+	current_task->priority = PRIO_DEAD;
+	current_task->time_to_run = 0;
+    current_task->ready_to_run = 0;
+	task_t* tmp_task = (task_t*)ready_queue;
     do
     {
         if(tmp_task->next == current_task)
@@ -623,17 +710,20 @@ current_task->time_to_run = 0;
         }
     }
     while (tmp_task->next);
-delete_current_task(current_task);
-  list_delete(process_list,current_task);
-    //free((void *)((u32)current_task->kernel_stack - KERNEL_STACK_SIZE)); // free kernelstack
-    //free((void *)current_task);
+	delete_current_task(current_task);
+  
+    free((void *)((u32)current_task->kernel_stack - KERNEL_STACK_SIZE)); 
+    free((void *)current_task);
 
-  current_task->id--;
-    
-    __asm__ volatile("sti");
-counter--;
+    __asm__ __volatile__("sti");
+	counter--;
+  //list_delete(process_list,current_task);
+////	bitset_clear(&pid_set, current_task->id);
+	//task_switching = 1; 
+	//;
+  reap_process(current_task);
 task_switching = 1;
-       // switch_context(); // switch to next task
+switch_context();
     
 }
 
@@ -688,14 +778,6 @@ void kill(int pid) {
   }
 }
 
-#include <fs.h>
-#include <system.h>
-#include <process.h>
-#include <tree.h>
-#include <list.h>
-#include "../bitset.h"
-#include <logging.h>
-static bitset_t pid_set;
 #include <shm.h>
 
 uint8_t process_compare(void * proc_v, void * pid_v) {
@@ -708,7 +790,7 @@ task_t * process_from_pid(pid_t pid) {
 	if (pid < 0) return NULL;
 
 	//spin_lock(tree_lock);
-	tree_node_t * entry = tree_find(process_tree,&pid,process_compare);
+	tree_node_t * entry = tree_find(process_list,&pid,process_compare);
 	//spin_unlock(tree_lock);
 	if (entry) {
 		return (task_t *)entry->value;
@@ -780,7 +862,7 @@ uint32_t fork(void) {
 	 
 	printk("new_task->id= %d\n", new_task->id);
 	/* Return the child PID */
-	return new_task->id;
+	return 0;
 }
 
 static int wait_candidate(task_t * parent, int pid, int options, task_t * proc) {
@@ -875,20 +957,21 @@ int sleep_on(list_t * queue) {
 	return current_task->sleep_interrupted;
 }
 
-
+extern ring_t* task_queue;
 
 int waitpid(int pid, int * status, int options) {
 	task_t * proc = (task_t *)current_task;
-	if (proc->group) {
-		proc = process_from_pid(proc->group);
-	}
+	//if (proc->group) {
+		//proc = process_from_pid(proc );
+	//}
 
 	debug_print(INFO, "waitpid(%s%d, ..., %d) (from pid=%d.%d)", (pid >= 0) ? "" : "-", (pid >= 0) ? pid : -pid, options, current_task->id, current_task->group);
 
 	do {
 		task_t * candidate = NULL;
 		int has_children = 0;
-
+ //   task_queue->current = task_queue->current->next;
+  //  return (task_t*)task_queue->current->data;
 		/* First, find out if there is anyone to reap */
 		foreach(node, proc->tree_entry->children) {
 			if (!node->value) {

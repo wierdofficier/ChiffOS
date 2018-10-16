@@ -304,12 +304,14 @@ typedef struct image {
 typedef struct tree_node {
 	void * value;
 	list_t * children;
+	
 	struct tree_node * parent;
 } tree_node_t;
 
 typedef struct {
 	size_t nodes;
 	tree_node_t * root;
+	node_t * head;
 } tree_t;
 
  
