@@ -104,10 +104,11 @@ void _task_initialize(void)
 
 	current_task->is_tasklet = 0;
  	tree_node_create(current_task);
-	list_insert(process_list, (void *)current_task);
+	//
  
 	scheduler_install();
-
+	//insert_current_task(current_task);
+	list_insert(process_list, (void *)current_task);
 	 __asm__ __volatile__("sti");
 }
 
@@ -622,17 +623,25 @@ void task02()
 
 int IdleTask(void)
 {
-	while(1) {}
-	 //printk("getpid() returns = %d \n", getpid());	 
+	while(1) {printk("getpid() returns = %d \n", getpid());}
+	 //	 
 }
 
 void TASK_testing()
 {	 
-	create_task_thread(IdleTask,PRIO_HIGH);
+	
 	create_task_thread(IdleTask,PRIO_HIGH);
 	create_task_thread(IdleTask,PRIO_HIGH);
 	create_task_thread(IdleTask,PRIO_HIGH);
  
+}
+extern unsigned char  * lfb_vid_memory ;
+extern   unsigned short term_width  ;    /* Width of the terminal (in cells) */
+extern   unsigned short term_height  ;
+int start_graphics_daemon()
+{
+ 
+for(;;) {memset((void *)(uintptr_t )lfb_vid_memory, 0x00, term_width * term_height * 12);}
 }
 
 void kill(int pid) {

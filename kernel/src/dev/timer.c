@@ -61,8 +61,9 @@ extern int boot_time;
 
  u32 timer_handle(u32 esp)
 {
+timerticks++;
 	if (++timer_subticks == SUBTICKS_PER_TICK || (behind && ++timer_subticks == SUBTICKS_PER_TICK)) {
-		timerticks++;
+		;
 		timer_subticks = 0;
 		if (timerticks % RESYNC_TIME == 0) {
 			uint32_t new_time = read_cmos();

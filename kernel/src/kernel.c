@@ -25,7 +25,8 @@
 #include <lwip/err.h>
 #include <lwip/stats.h>
 #include <netif/etharp.h>
-
+int start_graphics_daemon();
+int init_graphics(void);
 #define MULTIBOOT_FLAG_MEM 0x001
 u32 tmp;
 u32 tmp2;
@@ -121,7 +122,9 @@ memset(p, 0, sizeof(void *) * NUM);
 
 }
 }
-
+extern unsigned char  * lfb_vid_memory;
+extern  unsigned short term_width ;    /* Width of the terminal (in cells) */
+extern  unsigned short term_height;
 static void tcpip_init_done(void* arg)
 {
 	sys_sem_t* sem = (sys_sem_t*)arg;
@@ -216,24 +219,29 @@ int socketdemo( )
         puts("Send failed");
         return 1;
     }
-       
+        
     //Receive a reply from the server
-    if( recv(socket_desc, server_reply , 6000 , 0) < 0)
+    if( recv(socket_desc, server_reply , 6000, 0) < 0)
     {
         puts("recv failed");
     }
     puts("Reply received\n");
+ 
+	
     printk("%s\n",server_reply);
-     
+     udelay(3);
     return 0;
 }
 char * boot_arg = NULL;
 void serial_install(void);
+struct multiboot *mboot_ptr;
+void _vesa_initialize();
 void kmain(struct multiboot *mbp, u32 magic)
 {
 	u32 initrd_location = *((u32*)mbp->mods_addr); //get the adress of initrd module
 	u32 initrd_end = *(u32*)(mbp->mods_addr+4); 
 	placement_pointer = initrd_end; 
+	mboot_ptr = mbp;
 	init_video_term();
  	puts("Welcome to chiffOS");
  	printk("\n");
@@ -313,7 +321,9 @@ void kmain(struct multiboot *mbp, u32 magic)
  	printk("Setting up the keyboard handler... ");
  	_kbd_initialize();
  	printk("[ok]\n");
- 
+	_vesa_initialize();
+ 	init_graphics();
+	memset((void *)(uintptr_t )lfb_vid_memory,9168575, term_width * term_height * 12);
  	printk("Initializing initrd... ");
  	//fs_root = install_initrd(initrd_location);
         printk("[ok]\n");
@@ -348,11 +358,12 @@ void kmain(struct multiboot *mbp, u32 magic)
 	printk("Initializing tasking... ");
         _task_initialize();
  	printk("[ok]\n");
-	//TASK_testing();
-	
+	// create_task_thread(start_graphics_daemon,PRIO_HIGH); 
+	// TASK_testing();
+	// for(;;);
 	shm_install();
 	map_vfs_directory("/dev");
-
+	
 	ata_initialize();
 
 	tmpfs_initialize();

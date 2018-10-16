@@ -377,7 +377,7 @@ udelay__( int seconds )
 static struct lwip_sock *
 get_socket(int s)
 {
-udelay__(1);
+//udelay__(1);
   struct lwip_sock *sock;
 
   s -= LWIP_SOCKET_OFFSET;
@@ -395,7 +395,7 @@ udelay__(1);
     set_errno(EBADF);
     return NULL;
   }
-udelay__(1);
+//udelay__(1);
   return sock;
 }
 

@@ -84,7 +84,7 @@ sys_mutex_t lock_tcpip_core;
  * @param arg unused argument
  */
 
-
+ 
 static void
 tcpip_thread(void *arg)
 {

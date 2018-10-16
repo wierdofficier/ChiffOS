@@ -29,6 +29,7 @@ static char * c_messages[] = {
 
 static char buffer[1024];
 
+
 void _debug_print(char * title, int line_no, log_type_t level, char *fmt, ...) {
 	//if (level >= debug_level && debug_file) {
 		va_list args;
@@ -44,7 +45,8 @@ void _debug_print(char * title, int line_no, log_type_t level, char *fmt, ...) {
 		}
 
 	 	printk(  "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, title, line_no, type, buffer);
- 
+
+
 	//}
 	/* else ignore */
 }
