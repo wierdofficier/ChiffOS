@@ -635,7 +635,7 @@ void * sbrk(uintptr_t increment) {
 			alloc_frame(page, 1, 0);
 		}
 		invalidate_page_tables();
-		debug_print(INFO, "Done.");
+		 
 	}
 
 	heap_end += increment;

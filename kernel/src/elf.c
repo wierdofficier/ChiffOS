@@ -4,8 +4,8 @@
 #include <elf.h>
 #include <process.h>
 #include <logging.h>
-#define USER_STACK_BOTTOM 0xAFF00000
-#define USER_STACK_TOP    0xB0000000
+#define USER_STACK_BOTTOM 0xAFF00
+#define USER_STACK_TOP    0xB00
 #define SHM_START 0xB0000000
 #define PUSH(stack, type, item) stack -= sizeof(type); \
 *((type *) stack) = item
@@ -14,12 +14,8 @@ extern list_t * process_list;
 void
 enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack,task_t * new_task) {
 	//IRQ_OFF;
-
-	set_kernel_stack(new_task->image.stack);
-
-	PUSH(stack, uintptr_t, (uintptr_t)argv);
-	PUSH(stack, int, argc);
-  create_user_task(location, new_task,argc,argv);
+ 
+        create_user_task(location, new_task,argc,argv);
 	// enter_userspace(location, stack);
 }
 
@@ -40,7 +36,7 @@ int exec_elf(char * path, fs_node_t * file, int argc, char ** argv, char ** env,
  
 	read_fs(file, 0, sizeof(Elf32_Header), (uint8_t *)&header);
 	 
-	//assert(directory && "Could not allocate a new page directory!");
+	// assert(directory && "Could not allocate a new page directory!");
 	/* Spawn a new process from this one */
 	   
 	
@@ -139,7 +135,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 	//__asm__ __volatile__("cli");
 	
 
-	//memset((task_t *)new_task, 0, sizeof(task_t));
+	 memset((task_t *)new_task, 0, sizeof(task_t));
 	new_task->id = pid++;
     new_task->esp = 0;
     new_task->eip = 0;
@@ -151,7 +147,7 @@ if (header.e_ident[0] != ELFMAG0 ||
     new_task->time_to_run = 10;
     new_task->ready_to_run = 1;
 	new_task->wd_name = strdup("/");
-	new_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
+	//new_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
  
 
 	/* Allocate space for a new process */
@@ -183,7 +179,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 	new_task->image.entry       = 0;
 	new_task->image.heap        = 0;
 	new_task->image.heap_actual = 0;
-	//new_task->image.stack       = initial_esp + 1;
+	// new_task->image.stack       = initial_esp + 1;
 	new_task->image.user_stack  = 0;
 	new_task->image.size        = 0;
 	new_task->image.shm_heap    = SHM_START; /* Yeah, a bit of a hack. */
@@ -201,17 +197,17 @@ if (header.e_ident[0] != ELFMAG0 ||
 
 	new_task->sched_node.prev = NULL;
 	new_task->sched_node.next = NULL;
-	//new_task->sched_node.value = init;
+	 //new_task->sched_node.value = init;
 
 	new_task->sleep_node.prev = NULL;
 	new_task->sleep_node.next = NULL;
-	//new_task->sleep_node.value = init;
+	// new_task->sleep_node.value = init;
 
 	new_task->timed_sleep_node = NULL;
 
 	new_task->is_tasklet = 0;
  tree_node_create(new_task);
-	// set_process_environment(new_task, current_directory);
+	  set_process_environment(new_task, current_directory);
 
 	/* What the hey, let's also set the description on this one */
 	//new_task->description = strdup("[init]");
@@ -376,7 +372,6 @@ int exec(
 		char ** env   /* Environmen variables */
 	) {
 	/* Open the file */
-
 	fs_node_t * file = kopen2(path,0);
 	if (!file) {
 		/* Command not found */

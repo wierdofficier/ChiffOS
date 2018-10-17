@@ -864,7 +864,7 @@ for(int g = 0 ; g < num_entries; g++)
  {
 u32 i = 0;
 
-
+//int size = strlen(text[2]);
 	while(i < strlen(text[g]))
 	{
 		//write_char(xx+1, yy+1, text[i++], 0x11440000);
@@ -882,8 +882,10 @@ u32 i = 0;
 				 yy += char_height;	
 			 	 xx = 0;
 			}	
-
-			 
+			
+		 
+		if(strlen(text[2]) == '\0' )
+				break;		 
 	 xx += char_width;
 	 
 	xxx =xx;

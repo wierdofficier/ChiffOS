@@ -279,16 +279,17 @@ return esp;
 //}
 if(r->int_no < 32)
 	{
-		printk("Received interrupt: %d (%s)\n", r->int_no, exception_messages[r->int_no]);
-		printk("EAX=%x EBX=%x ECX=%x EDX=%x\n", r->eax, r->ebx, r->ecx, r->edx);
-		printk("ESI=%x EDI=%x EBP=%x\n", r->esi, r->edi, r->ebp);
+		//printk("Received interrupt: %d (%s)\n", r->int_no, exception_messages[r->int_no]);
+		//printk("EAX=%x EBX=%x ECX=%x EDX=%x\n", r->eax, r->ebx, r->ecx, r->edx);
+		//printk("ESI=%x EDI=%x EBP=%x\n", r->esi, r->edi, r->ebp);
 		//printk("CS =%x EIP=%x EFLAGS=%x USERESP=%x\n", r->cs, r->eip, r->eflags, r->useresp);
-		printk("INT=%02dd ERR_CODE=0x%x DS=%x\n", r->int_no, r->err_code, r->ds);
-		printk("\n");
+		//printk("INT=%02dd ERR_CODE=0x%x DS=%x\n", r->int_no, r->err_code, r->ds);
+		//printk("\n");
+		sleep(2);
 		uint32_t faulting_address;
 	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-	printk("faulting_address %x\n", faulting_address);
-	 for(;;);
+	//printk("faulting_address %x\n", faulting_address);
+	return esp;
 			
 	}
 	return esp;

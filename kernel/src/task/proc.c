@@ -117,7 +117,7 @@ void _task_initialize(void)
  
 	scheduler_install();
 	// insert_current_task(current_task);
-	list_insert(process_list,  current_task);
+	//list_insert(process_list,  current_task);
 //make_process_ready(current_task);
 	 __asm__ __volatile__("sti");
 
@@ -201,15 +201,15 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	kernel_stack->eflags = eflags;
 	kernel_stack->cs = code_segment;
 	kernel_stack->eip = (u32)entry;
-	kernel_stack->err_code = argc;
-	kernel_stack->int_no = argc;
+	kernel_stack->err_code = 0;
+	kernel_stack->int_no = 0;
 	kernel_stack->eax = argc;
-	kernel_stack->ecx = argc;
-	kernel_stack->edx = argc;
-	kernel_stack->ebx = argc;
-	kernel_stack->ebp =argc;
-	kernel_stack->esi = argc;
-	kernel_stack->edi = argc;
+	kernel_stack->ecx = (uintptr_t)argv;
+	kernel_stack->edx = 0;
+	kernel_stack->ebx = 0;
+	kernel_stack->ebp = 0;
+	kernel_stack->esi = 0;
+	kernel_stack->edi = 0;
 
 	if(privilege == 3) data_segment = 0x23;
 		kernel_stack->ds = data_segment;
@@ -654,9 +654,18 @@ exit();
 	//delete_process(proc);
 	//debug_print_process_tree();
 }
+
+int exit_once =1 ;
 void exit()
 {
-//task_switching = 0;
+
+ if(exit_once == 1)
+{
+	//exit_once=0;
+	//return;
+exit_once = 0;
+}
+ 
     __asm__ __volatile__("cli");
 	current_task->priority = PRIO_DEAD;
 	current_task->time_to_run = 0;
@@ -678,15 +687,16 @@ void exit()
   
     free((void *)((u32)current_task->kernel_stack - KERNEL_STACK_SIZE)); 
     free((void *)current_task);
-
+ 
     __asm__ __volatile__("sti");
 	counter--;
-  //list_delete(process_list,current_task);
-////	bitset_clear(&pid_set, current_task->id);
-	//task_switching = 1; 
+  list_delete(process_list,current_task);
+ 	bitset_clear(&pid_set, current_task->id);
+	 task_switching = 1; 
 	//;
+ 
   //reap_process(current_task);
-task_switching = 1;
+ free(current_task->name);
 switch_context();
 }
 

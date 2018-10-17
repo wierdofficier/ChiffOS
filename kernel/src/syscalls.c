@@ -338,7 +338,7 @@ static int sys_fswait_timeout(int c, int fds[], int timeout) {
 			return -EACCES;
 		}
 		uint32_t out = write_fs(node, node->offset, len, (uint8_t *)ptr);
-		printk("%s\n",(uint8_t *)ptr); //ändring
+		//printk("%s\n",(uint8_t *)ptr); //ändring
 		node->offset += out;
 		return out;
 	}
@@ -465,6 +465,7 @@ static int sys_getuid(void) {
 extern int yy;
 extern int xxx;
 extern unsigned short char_width;
+extern unsigned short char_height;
  int USING_STDIO = 0;
 int stdio_read__(int fd, void *buf, size_t length) {
 	 
@@ -482,7 +483,7 @@ int n = 0;
 
 		if (c >= ' ' || c == '\n') {
 			n+=char_width;
-			write_char(xxx+n, yy, c, 0x11ffff00);
+			write_char(xxx+n, yy-char_height, c, 0x11ffff00);
 			 
 			//putch(c); // echo to screen
 			//update_cursor();
@@ -491,7 +492,7 @@ int n = 0;
 			if (p > (char *)buf) {
 				p--;
 				n+=char_width;
-				write_char(xxx+n, yy, c, 0x11ffff00);
+				write_char(xxx+n, yy-char_height, c, 0x11ffff00);
 			//	putch(c);
 			//	putch(' ');
 			//	putch(c);
@@ -542,7 +543,7 @@ if(fd == 0)
 		fs_node_t * node = FD_ENTRY(fd);
  		 //node->read = read_ext2 ;
  
-  		 // printk("node->offset %d :: len = %d\n",node->offset,len);
+  		  //printk("node->offset %d :: len = %d\n",node->offset,len);
 		
 		uint32_t out = read_fs(node, node->offset, len, (uint8_t *)ptr);
 	    
@@ -659,7 +660,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 	argv_[argc] = 0;
  
 	char ** envp_;
-	/*if (envp && envc) {
+	 if (envp && envc) {
 		envp_ = malloc(sizeof(char *) * (envc + 1));
 		for (int j = 0; j < envc; ++j) {
 			envp_[j] = malloc((strlen(envp[j]) + 1) * sizeof(char));
@@ -669,7 +670,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 	} else {
 		envp_ = malloc(sizeof(char *));
 		envp_[0] = NULL;
-	}*/
+	} 
 	debug_print(INFO,"Releasing all shmem regions...");
 	 shm_release_all((task_t *)current_task);
 
@@ -677,7 +678,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 
 	debug_print(INFO,"Executing...");
 	/* Discard envp */
-	exec((char *)filename, argc, (char **)argv_, (char **)NULL/*envp_*/);
+	exec((char *)filename, argc, (char **)argv_, (char **)envp_);
 	return -1;
 }
  typedef unsigned int socklen_t;
@@ -790,7 +791,8 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	//   printk("regs nr: %d\n",r->eax);
+	    printk("regs nr: %d\n",r->eax);
+
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;
 

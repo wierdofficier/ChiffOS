@@ -1137,7 +1137,7 @@ static ext2_inodetable_t * read_inode(ext2_fs_t * this, uint32_t inode) {
 }
 
   uint32_t read_ext2(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer) {
-printk("read_ext2\n");
+ 
 	ext2_fs_t * this = (ext2_fs_t *)node->device;
 	ext2_inodetable_t * inode = read_inode(this, node->inode);
 	uint32_t end;

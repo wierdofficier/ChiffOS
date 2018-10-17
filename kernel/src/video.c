@@ -214,7 +214,7 @@ void printk(const char *fmt, ...)
 
 static char * c_messages[] = {
 	" \033[1;34mINFO\033[0m:",
-	" \033[1;35mNOTICE\033[0m:",
+	" \033[1;1mNOTICE\033[0m:",
 	" \033[1;33mWARNING\033[0m:",
 	" \033[1;31mERROR\033[0m:",
 	" \033[1;37;41mCRITICAL\033[0m:",
@@ -233,12 +233,12 @@ static char newbuf[81921];
 //char buf[100] = {"\033[1;35mNOTICE\033[0m:"};
 
 
-	printed_len = vsnprintf( printk_buf, sizeof(printk_buf), fmt, args);
+	printed_len = vsnprintf( printk_buf, sizeof(printk_buf) , fmt, args);
 
  
 va_end(args);
 
-		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf);
+		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf );
 
 if(serial_printing)
 {
@@ -260,8 +260,10 @@ sprintf(newbuf[0] , "[%4d", gettickcount() );
  list3[0] =   newbuf[0];
 sprintf(newbuf[1] , "%s]", "[INFO]" );
  list3[1] =   newbuf[1];
+if(strlen(printk_buf) > 15)
+ printk_buf[strlen(printk_buf) -2] = '\0';
  
-sprintf(newbuf[2] , "%s", printk_buf  );
+sprintf(newbuf[2] , "%s", printk_buf);
 
 list3[2] =   newbuf[2];
   puts_g( list3);

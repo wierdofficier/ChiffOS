@@ -270,7 +270,7 @@ void launchProg(char **args, int background){
 //if(args[1] != NULL)
 // printf("Process creates with args: %s\n",args[1]);
 		if (execve (args[0],args,0)==err){
-			printf("Command not found");
+			printf("Command not found\n");
 			//kill(getpid(),SIGTERM);
 		}
 	  
@@ -708,19 +708,20 @@ int main(int argc, char *argv[], char ** envp) {
 	while(TRUE){
 		// We print the shell prompt if necessary
 	//  shellPrompt();
-
-		no_reprint_prmpt = 0;
+	char hostn[1204] = "";
+	 gethostname(hostn, sizeof(hostn));
+	if (no_reprint_prmpt == 0) printf("user@%s:%s# ", hostn, getcwd(currentDirectory, 1024)); 
+no_reprint_prmpt = 0;
 		
 		// We empty the line buffer
 		memset ( line, '\0', MAXLINE );
 
 		// We wait for user input
-		char hostn[1204] = "";
-	 gethostname(hostn, sizeof(hostn));
-printf("user@%s %s > ", hostn, getcwd(currentDirectory, 1024));
+	
 
-		 fgets(line, MAXLINE, stdin);
-		// getline(stdin,line,MAXLINE);
+
+		// fgets(line, MAXLINE, stdin);
+		  getline(stdin,line,MAXLINE);
 		 
 printf("\n");
 		// If nothing is written, the loop is executed again

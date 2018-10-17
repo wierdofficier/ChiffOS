@@ -201,7 +201,7 @@ void main()
   for(i=0;i<SCREEN_HEIGHT;i++)
     memset(&VGA[SCREEN_WIDTH*i],i,SCREEN_WIDTH);
 
-  //wait(25);
+ wait(25);
 	printf("y= %d  :: x = %d\n", bmp.height,bmp.width);
  
   /* draw a tiled bitmap pattern on the left */
