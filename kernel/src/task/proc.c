@@ -16,6 +16,7 @@
 #include <list.h>
 #include "../bitset.h"
 #include <logging.h>
+void kexit(int retval);
 static bitset_t pid_set;
 int IdleTask(void);
 volatile task_t *current_task;
@@ -94,8 +95,8 @@ void _task_initialize(void)
 
 	/* Process is not finished */
 	current_task->finished = 0;
-	current_task->started = 1;
-	current_task->running = 1;
+	current_task->started = 100;
+	current_task->running = 100;
 	current_task->wait_queue = list_create();
 	current_task->shm_mappings = list_create();
 	current_task->signal_queue = list_create();
@@ -116,9 +117,9 @@ void _task_initialize(void)
 	//
  
 	scheduler_install();
-	// insert_current_task(current_task);
-	//list_insert(process_list,  current_task);
-//make_process_ready(current_task);
+	//  insert_current_task(current_task);
+	// list_insert(process_list,  current_task);
+// make_process_ready(current_task);
 	 __asm__ __volatile__("sti");
 
 }
@@ -142,7 +143,7 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	//memset(new_task, 0, sizeof(task_t));
 	new_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
 	
-    
+    printk("argc = %d :: argv %s \n", argc,argv);
 	new_task->state = TASK_RUNNING;
 	
 		current_task->priority = priority;
@@ -163,10 +164,10 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 			new_task->time_to_run = 5;
 		break;
 		case PRIO_HIGH:
-			new_task->time_to_run = 10;
+			new_task->time_to_run = 1;
 		break;
 		default:
-			new_task->time_to_run = 10;
+			new_task->time_to_run = 1;
 		break;
 	}
 
@@ -181,35 +182,27 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	
 	u32 code_segment = 0x08, data_segment = 0x10;
 	u32 eflags = 0x0202;
-	kernel_stack->useresp =(u32)&exit;
+	kernel_stack->useresp =(u32)&kexit;
 	kernel_stack->ss = data_segment;
 	if (new_task->privilege == 3 && new_task->type == THREAD)
         {         
            kernel_stack->ss = 0x23; 
-           kernel_stack->useresp = (u32)&exit;
+           kernel_stack->useresp = (u32)argc;
            code_segment = 0x1B; 
         }
-	if(new_task->privilege == 3 && new_task->type == VM86)
-	{
-		code_segment = 0;
-		kernel_stack->ss = 0x23;
 
-		kernel_stack->useresp = (u32)&exit;
-		eflags = 0x20202;
-	}	
-		
 	kernel_stack->eflags = eflags;
 	kernel_stack->cs = code_segment;
 	kernel_stack->eip = (u32)entry;
-	kernel_stack->err_code = 0;
-	kernel_stack->int_no = 0;
+	kernel_stack->err_code = argc;
+	kernel_stack->int_no = argc;
 	kernel_stack->eax = argc;
 	kernel_stack->ecx = (uintptr_t)argv;
-	kernel_stack->edx = 0;
-	kernel_stack->ebx = 0;
-	kernel_stack->ebp = 0;
-	kernel_stack->esi = 0;
-	kernel_stack->edi = 0;
+	kernel_stack->edx = argc;
+	kernel_stack->ebx = argc;
+	kernel_stack->ebp = argc;
+	kernel_stack->esi = argc;
+	kernel_stack->edi = argc;
 
 	if(privilege == 3) data_segment = 0x23;
 		kernel_stack->ds = data_segment;
@@ -240,7 +233,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
         new_task->next = 0;
         new_task->type = THREAD;
         new_task->priority = PRIO_HIGH;
-        new_task->time_to_run = 10;
+        new_task->time_to_run = 1;
         new_task->ready_to_run = 1;
 	new_task->wd_name = strdup("/");
 	 
@@ -350,10 +343,10 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 			new_task->time_to_run = 5;
 		break;
 		case PRIO_HIGH:
-			new_task->time_to_run = 10;
+			new_task->time_to_run = 1;
 		break;
 		default:
-			new_task->time_to_run = 10;
+			new_task->time_to_run = 1;
 		break;
 	}
 
@@ -368,12 +361,12 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 	
     u32 code_segment = 0x08, data_segment = 0x10;
     u32 eflags = 0x0202;
-    kernel_stack->useresp =(u32)&exit;
+    kernel_stack->useresp =(u32)&kexit;
     kernel_stack->ss = data_segment;
     if (new_task->privilege == 3 && new_task->type == THREAD)
         {         
            kernel_stack->ss = 0x23; 
-           kernel_stack->useresp = (u32)&exit;
+           kernel_stack->useresp = (u32)&kexit;
            code_segment = 0x1B; 
         }
 	if(new_task->privilege == 3 && new_task->type == VM86)
@@ -381,7 +374,7 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 	     code_segment = 0;
 	     kernel_stack->ss = 0x23;
 
-		  kernel_stack->useresp = (u32)&exit;
+		  kernel_stack->useresp = (u32)&kexit;
 		 eflags = 0x20202;
 		}	
 		
@@ -489,7 +482,7 @@ task_t * next_ready_process(void) {
 
 u32 _task_switch(u32 esp)
 {
-
+__asm__ __volatile__("sti");
 if(DOTASKSWITCH == 0)
 return esp;
 
@@ -499,7 +492,7 @@ current_task->eip = r->eip;
 current_task->esp = esp;
  task_t* oldTask = current_task; 
 	//current_task = list_find(process_list, (void *)current_task);
- 	// current_task = next_ready_process();
+ 	//   current_task = next_ready_process();
 	 current_task = get_current_task();
   //list_insert(process_list, (void *)new_task);
  if(oldTask == current_task) return esp; // No task switch because old==new
@@ -511,7 +504,7 @@ if(current_task->priority == PRIO_LOW)
 			current_task->time_to_run = 2;	
 		
 		 if( current_task->priority == PRIO_HIGH)
-			current_task->time_to_run = 4;
+			current_task->time_to_run = 1;
 
 for (volatile task_t *t = ready_queue; t != 0; t = t->next){
   if (t->state == TASK_SLEEPING && t->wakeup_time <= gettickcount()){
@@ -552,9 +545,9 @@ return current_task->esp;
 void sleep2(u32 milliseconds) 
 {	
 	printk("sleep called \n");
-milliseconds = milliseconds*1000;//
+milliseconds = milliseconds*10;//
 	const u32 start_ticks = gettickcount();
-	u32 ticks_to_wait = milliseconds / (1000 / TIMER_HZ);
+	u32 ticks_to_wait = milliseconds / (10 / TIMER_HZ);
 
 	if (ticks_to_wait == 0)
 	ticks_to_wait = 1;
@@ -573,6 +566,7 @@ void switch_context()
  	__asm__ volatile("int $0x20");
  	else
  	{
+	printk("HTL!!\n");
  	__asm__ volatile("hlt");
  	__asm__ volatile("int $0x20");
  	}
@@ -648,22 +642,27 @@ void delete_process(task_t * proc) {
 
 void reap_process(task_t * proc) {
 	debug_print(INFO, "Reaping process %d; mem before = %d", proc->id, memory_use());
-	//free(proc->name);
+	 free(proc->name);
 	debug_print(INFO, "Reaped  process %d; mem after = %d", proc->id, memory_use());
-exit();
-	//delete_process(proc);
-	//debug_print_process_tree();
+//exit();
+	 delete_process(proc);
+	 debug_print_process_tree();
 }
 
 int exit_once =1 ;
 void exit()
 {
-
+task_switching = 0;
  if(exit_once == 1)
 {
-	//exit_once=0;
-	//return;
-exit_once = 0;
+		debug_print(INFO, "Reaping process %d; mem before = %d", current_task->id, memory_use());
+	 free(current_task->name);
+	debug_print(INFO, "Reaped  process %d; mem after = %d", current_task->id, memory_use());
+//exit();
+	 delete_process(current_task);
+	 debug_print_process_tree();
+return;
+
 }
  
     __asm__ __volatile__("cli");
@@ -697,13 +696,18 @@ exit_once = 0;
  
   //reap_process(current_task);
  free(current_task->name);
+printk("testing\n");
+ printk("testing\n");
+exit_once = 0;
+task_switching = 1; 
 switch_context();
+ 
 }
 
 void _exit(int status)
 {
- task_switching = 0;
-    __asm__ __volatile__("cli");
+ //task_switching = 0;
+   // __asm__ __volatile__("cli");
 	current_task->priority = PRIO_DEAD;
 	current_task->time_to_run = 0;
     current_task->ready_to_run = 0;
@@ -731,8 +735,8 @@ void _exit(int status)
 ////	bitset_clear(&pid_set, current_task->id);
 	//task_switching = 1; 
 	//;
-  reap_process(current_task);
-task_switching = 1;
+ // reap_process(current_task);
+//task_switching = 1;
 switch_context();
     
 }
@@ -1134,7 +1138,7 @@ void release_directory_for_exec(page_directory_t * dir) {
 			continue;
 		}
 		if (kernel_directory->tables[i] != dir->tables[i]) {
-			if (i * 0x1000 * 1024 < USER_STACK_BOTTOM) {
+			if (i * 0x10 * 1024 < USER_STACK_BOTTOM) {
 				for (uint32_t j = 0; j < 1024; ++j) {
 					if (dir->tables[i]->pages[j].frame) {
 						free_frame(&(dir->tables[i]->pages[j]));
@@ -1161,7 +1165,7 @@ volatile task_t * _task_initialize_random(volatile task_t * TASK)
 	TASK->next = 0;
 	TASK->type = THREAD;
 	TASK->priority = PRIO_HIGH;
-	TASK->time_to_run = 10;
+	TASK->time_to_run = 1;
 	TASK->ready_to_run = 1;
 	TASK->wd_name = strdup("/");
 	TASK->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
@@ -1207,7 +1211,116 @@ return TASK;
 
 	 
 }
+task_t * process_get_parent(task_t * process) {
+	task_t * result = NULL;
+	//spin_lock(tree_lock);
 
+	tree_node_t * entry = process->tree_entry;
+
+	if (entry->parent) {
+		result = entry->parent->value;
+	}
+
+	//spin_unlock(tree_lock);
+	return result;
+}
+
+/*
+ * Free a directory and its tables
+ */
+void release_directory(page_directory_t * dir) {
+	dir->ref_count--;
+
+	if (dir->ref_count < 1) {
+		uint32_t i;
+		for (i = 0; i < 1024; ++i) {
+			if (!dir->tables[i] || (uintptr_t)dir->tables[i] == (uintptr_t)0xFFFFFFFF) {
+				continue;
+			}
+			if (kernel_directory->tables[i] != dir->tables[i]) {
+				if (i * 0x10 * 1024 < SHM_START) {
+					for (uint32_t j = 0; j < 1024; ++j) {
+						if (dir->tables[i]->pages[j].frame) {
+							free_frame(&(dir->tables[i]->pages[j]));
+						}
+					}
+				}
+				free(dir->tables[i]);
+			}
+		}
+		free(dir);
+	}
+}
+void cleanup_process(task_t * proc, int retval) {
+	proc->status   = retval;
+	proc->finished = 1;
+
+	list_free(proc->wait_queue);
+	free(proc->wait_queue);
+	list_free(proc->signal_queue);
+	free(proc->signal_queue);
+	free(proc->wd_name);
+
+
+	if (proc->node_waits) {
+		list_free(proc->node_waits);
+		free(proc->node_waits);
+		proc->node_waits = NULL;
+	}
+	debug_print(INFO, "Releasing shared memory for %d", proc->id);
+	shm_release_all(proc);
+	free(proc->shm_mappings);
+	debug_print(INFO, "Freeing more mems %d", proc->id);
+	if (proc->signal_kstack) {
+		free(proc->signal_kstack);
+	}
+
+	release_directory(proc->thread.page_directory);
+
+	debug_print(INFO, "Dec'ing fds for %d", proc->id);
+	proc->fds->refs--;
+	if (proc->fds->refs == 0) {
+		debug_print(INFO, "Reached 0, all dependencies are closed for %d's file descriptors and page directories", proc->id);
+		debug_print(INFO, "Going to clear out the file descriptors %d", proc->id);
+		for (uint32_t i = 0; i < proc->fds->length; ++i) {
+			if (proc->fds->entries[i]) {
+				close_fs(proc->fds->entries[i]);
+				proc->fds->entries[i] = NULL;
+			}
+		}
+		debug_print(INFO, "... and their storage %d", proc->id);
+		free(proc->fds->entries);
+		free(proc->fds);
+		debug_print(INFO, "... and the kernel stack (hope this ain't us) %d", proc->id);
+		free((void *)(proc->image.stack - KERNEL_STACK_SIZE));
+	}
+}
+void task_exit(int retval) {
+	/* Free the image memory */
+	if (__builtin_expect(current_task->id == 0,0)) {
+		/* This is probably bad... */
+		_task_switch(0);
+		return;
+	}
+	cleanup_process((task_t *)current_task, retval);
+
+	task_t * parent = process_get_parent((task_t *)current_task);
+
+	if (parent && !parent->finished) {
+		wakeup_queue(parent->wait_queue);
+	}
+printk("task switch\n");
+	_task_switch(0);
+}
+
+/*
+ * Call task_exit() and immediately STOP if we can't.
+ */
+void kexit(int retval) {
+	task_exit(retval);
+	debug_print(CRITICAL, "Process returned from task_exit! Environment is definitely unclean. Stopping.");
+	 
+}
 void set_process_environment(task_t * proc, page_directory_t * directory) {
 	assert(proc);
 	assert(directory);

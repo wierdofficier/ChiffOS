@@ -4,9 +4,9 @@
 #include <elf.h>
 #include <process.h>
 #include <logging.h>
-#define USER_STACK_BOTTOM 0xAFF00
-#define USER_STACK_TOP    0xB00
-#define SHM_START 0xB0000000
+#define USER_STACK_BOTTOM 0x110000
+#define USER_STACK_TOP    0x190000
+#define SHM_START 0x190000
 #define PUSH(stack, type, item) stack -= sizeof(type); \
 *((type *) stack) = item
 extern list_t * process_list;  
@@ -14,8 +14,13 @@ extern list_t * process_list;
 void
 enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack,task_t * new_task) {
 	//IRQ_OFF;
+ set_kernel_stack(new_task->image.user_stack);
+printk("new_task->image.user_stack %x \n", new_task->image.user_stack);
+ 
  
         create_user_task(location, new_task,argc,argv);
+ 	// *((unsigned int  *)(new_task->image.user_stack - 0)) = (unsigned int )envp;
+
 	// enter_userspace(location, stack);
 }
 
@@ -117,7 +122,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 			}
 			IRQ_RES;
 			read_fs(file, phdr.p_offset, phdr.p_filesz, (uint8_t *)phdr.p_vaddr);
-			IRQ_OFF;
+			//IRQ_OFF;
 			size_t r = phdr.p_filesz;
 			while (r < phdr.p_memsz) {
 				*(char *)(phdr.p_vaddr + r) = 0;
@@ -135,7 +140,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 	//__asm__ __volatile__("cli");
 	
 
-	 memset((task_t *)new_task, 0, sizeof(task_t));
+	// memset((task_t *)new_task, 0, sizeof(task_t));
 	new_task->id = pid++;
     new_task->esp = 0;
     new_task->eip = 0;
@@ -207,7 +212,7 @@ if (header.e_ident[0] != ELFMAG0 ||
 
 	new_task->is_tasklet = 0;
  tree_node_create(new_task);
-	  set_process_environment(new_task, current_directory);
+	//  set_process_environment(new_task, current_directory);
 
 	/* What the hey, let's also set the description on this one */
 	//new_task->description = strdup("[init]");

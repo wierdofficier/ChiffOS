@@ -256,16 +256,16 @@ if(serial_printing)
   if(GRAPHICS_ON == 1)
 {
 static char newbuf[4][81912];
-sprintf(newbuf[0] , "[%4d", gettickcount() );
+ sprintf(newbuf[0] , "[");
  list3[0] =   newbuf[0];
-sprintf(newbuf[1] , "%s]", "[INFO]" );
- list3[1] =   newbuf[1];
-if(strlen(printk_buf) > 15)
- printk_buf[strlen(printk_buf) -2] = '\0';
- 
-sprintf(newbuf[2] , "%s", printk_buf);
 
-list3[2] =   newbuf[2];
+ sprintf(newbuf[2] , "]");
+  list3[2] =   newbuf[2];
+ 
+ 
+sprintf(newbuf[1] , "%s", printk_buf);
+
+list3[1] =   newbuf[1];
   puts_g( list3);
  
 }  

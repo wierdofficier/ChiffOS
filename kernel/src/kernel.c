@@ -399,7 +399,7 @@ void kmain(struct multiboot *mbp, u32 magic)
 	DOTASKSWITCH=1;
 
  	 init_netifs();
- 	//socketdemo();
+ 	  socketdemo();
 	//
 	
 for(;;);

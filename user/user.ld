@@ -1,4 +1,4 @@
-STARTUP(/home/kosmick/chiffos/ChiffOS/user/start.o)
+STARTUP(/home/sim/githubCHIFFO/ChiffOS-master/user/start.o)
 OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386)
 SECTIONS

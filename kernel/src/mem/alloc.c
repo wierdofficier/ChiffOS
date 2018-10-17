@@ -831,7 +831,8 @@ static void klfree(void *ptr) {
 	 */
 	klmalloc_bin_header * header_old = (void *)((uintptr_t)ptr & (uintptr_t)~PAGE_MASK);
 	if (header_old->bin_magic != BIN_MAGIC) {
-		assert(0 && "Bad magic on realloc.");
+			
+		//assert(0 && "Bad magic on realloc.");
 		//return NULL;
 	}
 

@@ -481,10 +481,16 @@ int n = 0;
 	while (p < (char *)buf + length - 1 /* NULL termination */) {
 		char c = getchar();
 
-		if (c >= ' ' || c == '\n') {
+		if (c >= ' ' ) {
 			n+=char_width;
 			write_char(xxx+n, yy-char_height, c, 0x11ffff00);
-			 
+			  if(c == 'n')
+			{
+				//while(1)
+				term_scroll(4);
+				}
+			//cell_redraw(xxx+n, yy-char_height);
+		
 			//putch(c); // echo to screen
 			//update_cursor();
 		}
@@ -492,7 +498,7 @@ int n = 0;
 			if (p > (char *)buf) {
 				p--;
 				n+=char_width;
-				write_char(xxx+n, yy-char_height, c, 0x11ffff00);
+			//	write_char(xxx+n, yy-char_height, c, 0x11ffff00);
 			//	putch(c);
 			//	putch(' ');
 			//	putch(c);
@@ -521,6 +527,7 @@ int n = 0;
 			*p++ = c;
 			ret++;
 		}
+		 
 	}
 
 	assert(p < (char *)buf + length);
@@ -678,6 +685,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 
 	debug_print(INFO,"Executing...");
 	/* Discard envp */
+	printk("argc = %d :: argv_ %s \n", argc,argv_);
 	exec((char *)filename, argc, (char **)argv_, (char **)envp_);
 	return -1;
 }
@@ -701,11 +709,11 @@ int shutdown(int socket, int how);
 int listen(int s, int backlog);
 void sleep2(u32 milliseconds);
 unsigned int ipaddr_addr(const char *cp);
-
+void kexit(int retval);
 void * sbrk(uintptr_t increment);
  void* syscalls[] =
 {
-&exit,			//0
+&kexit,			//0
 &nop,
 &sys_open,
 &sys_read,
@@ -720,7 +728,7 @@ void * sbrk(uintptr_t increment);
 &nop,
 &nop,
 &sys_seek,
-&sys_lstat, 			//15
+&sys_stat, 			//15
 &nop,
 &nop,
 &nop,
@@ -791,7 +799,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	    printk("regs nr: %d\n",r->eax);
+	     //printk("regs nr: %d\n",r->eax);
 
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;

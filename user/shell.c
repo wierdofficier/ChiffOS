@@ -119,12 +119,12 @@ void init(){
  * Method used to print the welcome screen of our shell
  */
 void welcomeScreen(){
-      //  printf("\n\t============================================\n");
-      //  printf("\t               Simple C Shell\n");
-     //   printf("\t--------------------------------------------\n");
-    //    printf("\t             Licensed under GPLv3:\n");
-     //   printf("\t============================================\n");
-     //   printf("\n\n");
+       printf("\n\t============================================\n");
+       printf("\t               Simple C Shell\n");
+        printf("\t--------------------------------------------\n");
+        printf("\t             Licensed under GPLv3:\n");
+        printf("\t============================================\n");
+         printf("\n ");
 }
 void prompt(){
  
@@ -255,7 +255,7 @@ int manageEnviron(char * args[], int option){
 void launchProg(char **args, int background){	 
 	 int err = -1;
 	 
-	  
+	//  printf("argument: %s\n",args[1]);
 	 // pid == 0 implies the following code is related to the child process
  
 		// We set the child to ignore SIGINT signals (we want the parent
@@ -496,8 +496,10 @@ typedef struct DIR {
 DIR * opendir (const char * dirname);
 int closedir (DIR * dir);
 struct dirent * readdir (DIR * dirp);
+int dont_print_prompt =1;
 int listall()
 {
+ 
  struct dirent *de;  // Pointer for directory entry 
   
     // opendir() returns a pointer of DIR type.  
@@ -508,13 +510,18 @@ int listall()
         printf("Could not open current directory" ); 
         return 0; 
     } 
-  
+  	char hostn[1204] = "";
+	 gethostname(hostn, sizeof(hostn));
     // Refer http://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html 
     // for readdir() 
     while ((de = readdir(dr)) != NULL) 
-            printf("%s\n", de->d_name); 
+	{
+            printf("user@%s:%s                 %s", hostn, getcwd(currentDirectory, 1024),de->d_name); 
+	   printf("\n");
+	}
+ 
+    closedir(dr);
   
-    closedir(dr);     
     return 0; 
 
 }		
@@ -693,7 +700,7 @@ int main(int argc, char *argv[], char ** envp) {
 	
 	// We call the method of initialization and the welcome screen
 	//init();
-	welcomeScreen();
+	//welcomeScreen();
     
     // We set our extern char** environ to the environment, so that
     // we can treat it later in other methods
@@ -710,7 +717,8 @@ int main(int argc, char *argv[], char ** envp) {
 	//  shellPrompt();
 	char hostn[1204] = "";
 	 gethostname(hostn, sizeof(hostn));
-	if (no_reprint_prmpt == 0) printf("user@%s:%s# ", hostn, getcwd(currentDirectory, 1024)); 
+
+	if (dont_print_prompt == 1) printf(" user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
 no_reprint_prmpt = 0;
 		
 		// We empty the line buffer
@@ -723,7 +731,7 @@ no_reprint_prmpt = 0;
 		// fgets(line, MAXLINE, stdin);
 		  getline(stdin,line,MAXLINE);
 		 
-printf("\n");
+if (dont_print_prompt == 1)printf("\n");
 		// If nothing is written, the loop is executed again
 		if((tokens[0] = strtok(line," \n\t")) == NULL) continue;
 		

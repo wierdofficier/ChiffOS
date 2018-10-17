@@ -679,7 +679,7 @@ void cell_set(unsigned short x, unsigned short y, unsigned int c, unsigned int f
 	if (x >= term_width || y >= term_height) return;
 
 	/* Calculate the cell position in the terminal buffer */
-	term_cell_t * cell = (term_cell_t *)((uint32_t *)lfb_vid_memory + (y * term_width + x) * sizeof(term_cell_t));
+	term_cell_t * cell = (term_cell_t *)((uint32_t *)lfb_vid_memory + (y * term_width + x) * 12);
  
 	/* Set cell attributes */
 	cell->c     = c;
@@ -692,14 +692,16 @@ void cell_redraw(unsigned short x, unsigned short y) {
 	if (x >= term_width || y >= term_height) return;
 
 	/* Calculate the cell position in the terminal buffer */
-	term_cell_t * cell = (term_cell_t *)((uint32_t*)lfb_vid_memory + (y * term_width + x) * sizeof(term_cell_t));
+	term_cell_t * cell = (term_cell_t *)((uint32_t *)lfb_vid_memory + (y * term_width + x) * 12);
 
 	/* If it's an image cell, redraw the image data. */
 	//if (cell->flags & ANSI_EXT_IMG) {
 	//	redraw_cell_image(x,y,cell);
 	//	return;
 	//}
- 
+  cell->c = "a";
+cell->bg= 255;
+
 	/* Special case empty cells. */
 	if (((unsigned int *)cell)[0] == 0x00000000) {
 		write_char ( x * char_width, y * char_height, "", cell->bg );
@@ -754,9 +756,9 @@ int width___;
 //memmove( (uintptr_t )lfb_vid_memory, (void *)(uintptr_t )lfb_vid_memory + (term_width *  char_height * how_much) * 12, char_height * (term_height - how_much) * term_width * 12);
 		/* Scroll up */
 		// width___ = term_width -4;
-		 memmove((uintptr_t )lfb_vid_memory, (void *)((uintptr_t )lfb_vid_memory + 12 * (term_width -4)), 12 * (term_width -4) * (term_height-4 ));
+	  	  memmove((uintptr_t )lfb_vid_memory, (void *)((uintptr_t )lfb_vid_memory + 12 * (term_width -4)), 12 * (term_width -4) * (term_height-4));
  
- 
+ 		  // memmove((void *)((uintptr_t)lfb_vid_memory  ), (void *)((uintptr_t )lfb_vid_memory - 12 * (term_width -4)), 12 * term_width-4 * (term_height-4));
  
 return;
 		/* Reset the "new" row to clean cells */
@@ -853,38 +855,85 @@ void put_dec_g(u32 n)
    write_char(0, yy, c2, 0x3344ffff);
 
 }
+char *strstr(const char *haystack, const char *needle) {
+	const char *p1 = haystack, *p2 = needle;
+	const char *match = NULL;
+
+	// Empty needle should return the first argument
+	if (*p2 == 0)
+		return (char *)haystack;
+
+	while (1) {
+		while (*p1 != 0 && *p2 != 0 && *p1 != *p2) {
+			// Skip along while nothing matches
+			p1++;
+		}
+		if (*p1 == 0 || *p2 == 0) {
+			// We reached the end with no match
+			break;
+		}
+		else if (*p1 == *p2) {
+			// We found a potential match (first character matches), test the rest
+			match = p1;
+			while (*p2 != 0 && *p1 == *p2) { p1++, p2++; }
+			if (*p2 == 0) {
+				// They match all until the end of needle: match!
+				return (char *)match;
+			}
+			else {
+				// Mismatch; try again at the start of needle, at the next p1
+				match = NULL;
+				p2 = needle;
+				continue;
+			}
+		}
+	}
+
+	return NULL;
+}
 int xxx;
 extern int USING_STDIO;
 void puts_g(const char **text)
 {
 	
+	 char * needle;
 int xx = 0;
 int num_entries = 3;
-for(int g = 0 ; g < num_entries; g++)
+for(int g = 1 ; g < 2; g++)
  {
 u32 i = 0;
 
 //int size = strlen(text[2]);
-	while(i < strlen(text[g]))
+	while(i < strlen(text[g])-1)
 	{
 		//write_char(xx+1, yy+1, text[i++], 0x11440000);
 		if(g == 0)
-			write_char(xx, yy, text[g][i++], 0x11ffff00);
+			write_char(xx, yy, text[g][i ], 0xffffffff);
 		if(g == 1)
-			write_char(xx, yy, text[g][i++], 0x111ff166);
+		{
+
+			write_char(xx, yy, text[g][i], 0xffffffff);
+		   	char* currentDirectory;
+        	   	char **haystack   = text;
+		 
+  			 if(text[g][i]== '/' && text[g][i-1]== ':')
+	 			write_char(strlen(text[g])*char_width-char_width , yy, '#', timerticks*100000);
+		 
+			i++;
+		}
 		if(g == 2)
-			write_char(xx, yy, text[g][i++], 0xffffffff);
+			write_char(xx, yy, text[g][i ], 0xffffffff);
 		if(g == 3)
 			write_char(xx, yy, text[g][i++], 0x00000000);		
-		
+			
 			if(xx > term_width)
 			{
 				 yy += char_height;	
 			 	 xx = 0;
 			}	
-			
+					
 		 
-		if(strlen(text[2]) == '\0' )
+		if(strlen(text[1]) == '\0' )
 				break;		 
 	 xx += char_width;
 	 
@@ -892,18 +941,26 @@ u32 i = 0;
 	 
 	
 	}
-
+ 
+	//serial_string(0x3F8, ret);
+ 
+	
 }
-yy += char_height;
-
 	if(yy > term_height)
 	{
  
-		memset((void *)(uintptr_t )lfb_vid_memory,0, term_width * term_height * 12);
+		 memset((void *)(uintptr_t )lfb_vid_memory,0, (term_width-4) * (term_height-4) * 12);
 
 		yy = 0;
 		
 	}
+
+	//	for (int i = 0; i < 2; ++i) {
+	//		for (uint16_t x = 0; x < term_width; ++x) {
+				
+	//		}
+	//	}
+yy += char_height;
 		// term_scroll(4);
 }
  
