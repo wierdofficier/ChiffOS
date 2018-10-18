@@ -893,22 +893,30 @@ char *strstr(const char *haystack, const char *needle) {
 }
 int xxx;
 extern int USING_STDIO;
-void puts_g(const char **text)
+void puts_g(  char **text)
 {
 	
 	 char * needle;
-int xx = 0;
+
 int num_entries = 3;
 for(int g = 1 ; g < 2; g++)
  {
-u32 i = 0;
 
+u32 i = 0;
+int xx = 0;
 //int size = strlen(text[2]);
 	while(i < strlen(text[g])-1)
 	{
+ 
+
 		//write_char(xx+1, yy+1, text[i++], 0x11440000);
-		if(g == 0)
-			write_char(xx, yy, text[g][i ], 0xffffffff);
+			 	 if(text[g][i ]== '/' && text[g][i-1]== ':' && text[g][i-2]== 'n') 
+					if(text[g][i ]== '/'  )
+						text[g][16 ] = '\0';	
+						
+				 if(text[g][i ]== "'" && text[g][i-1]== "'" && text[g][i-2]== '`')	
+					 	break; 
+			 
 		if(g == 1)
 		{
 
@@ -916,36 +924,37 @@ u32 i = 0;
 		   	char* currentDirectory;
         	   	char **haystack   = text;
 		 
-  			 if(text[g][i]== '/' && text[g][i-1]== ':')
-	 			write_char(strlen(text[g])*char_width-char_width , yy, '#', timerticks*100000);
+  		 if(text[g][i]== '/' && text[g][i-1]== ':')
+	 			write_char(xx+16 , yy, '#', timerticks*100000);
 		 
 			i++;
 		}
-		if(g == 2)
-			write_char(xx, yy, text[g][i ], 0xffffffff);
-		if(g == 3)
-			write_char(xx, yy, text[g][i++], 0x00000000);		
+ 	
 			
 			if(xx > term_width)
 			{
 				 yy += char_height;	
 			 	 xx = 0;
 			}	
-					
 		 
+
 		if(strlen(text[1]) == '\0' )
 				break;		 
 	 xx += char_width;
-	 
-	xxx =xx;
-	 
+	 if(text[g][i]== '/' && text[g][i-1]== ':') 
+		xxx =xx ;
 	
 	}
- 
+ 	  	//  memmove((uintptr_t )lfb_vid_memory, (void *)((uintptr_t )lfb_vid_memory + 12 * (term_width -4)), 12 * (term_width -4) * (term_height-4));
 	//serial_string(0x3F8, ret);
  
 	
 }
+ 
+	
+		uintptr_t * cell =  ((uint32_t *)lfb_vid_memory + (yy * term_width + xxx) * 12);
+	// memset((void *)(uintptr_t )lfb_vid_memory+x,0, (term_width-4) * (char_height-4) * 12);
+ 
 	if(yy > term_height)
 	{
  

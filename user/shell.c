@@ -96,11 +96,8 @@ void init(){
 			
 			// Put ourselves in our own process group
 			setpgid(GBSH_PID, GBSH_PID); // we make the shell process the new process group leader
-			GBSH_PGID = getpgrp();
-			if (GBSH_PID != GBSH_PGID) {
-					printf("Error, the shell is not process group leader");
-					exit(EXIT_FAILURE);
-			}
+			//GBSH_PGID = getpgrp();
+			 
 			// Grab control of the terminal
 			tcsetpgrp(STDIN_FILENO, GBSH_PGID);  
 			
@@ -111,7 +108,7 @@ void init(){
 			currentDirectory = (char*) calloc(1024, sizeof(char));
         } else {
                 printf("Could not make the shell interactive.\n");
-                exit(EXIT_FAILURE);
+              //  exit(EXIT_FAILURE);
         }
 }
 
@@ -119,12 +116,7 @@ void init(){
  * Method used to print the welcome screen of our shell
  */
 void welcomeScreen(){
-       printf("\n\t============================================\n");
-       printf("\t               Simple C Shell\n");
-        printf("\t--------------------------------------------\n");
-        printf("\t             Licensed under GPLv3:\n");
-        printf("\t============================================\n");
-         printf("\n ");
+ 
 }
 void prompt(){
  
@@ -179,7 +171,7 @@ void shellPrompt(){
 int changeDirectory(char* args[]){
 	// If we write no path (only 'cd'), then go to the home directory
 	if (args[1] == NULL) {
-		chdir(getenv("HOME")); 
+	//	chdir(getenv("HOME")); 
 		return 1;
 	}
 	// Else we change the directory to the one specified by the 
@@ -215,11 +207,11 @@ int manageEnviron(char * args[], int option){
 			}
 			
 			// We use different output for new and overwritten variables
-			if(getenv(args[1]) != NULL){
+			/*if(getenv(args[1]) != NULL){
 				printf("%s", "The variable has been overwritten\n");
 			}else{
 				printf("%s", "The variable has been created\n");
-			}
+			}*/
 			
 			// If we specify no value for the variable, we set it to ""
 			if (args[2] == NULL){
@@ -235,12 +227,12 @@ int manageEnviron(char * args[], int option){
 				printf("%s","Not enought input arguments\n");
 				return -1;
 			}
-			if(getenv(args[1]) != NULL){
-				unsetenv(args[1]);
-				printf("%s", "The variable has been erased\n");
-			}else{
-				printf("%s", "The variable does not exist\n");
-			}
+			//if(getenv(args[1]) != NULL){
+			//	unsetenv(args[1]);
+			//	printf("%s", "The variable has been erased\n");
+			//}else{
+			//	printf("%s", "The variable does not exist\n");
+			//}
 		break;
 			
 			
@@ -269,8 +261,10 @@ void launchProg(char **args, int background){
 		// If we launch non-existing commands we end the process
 //if(args[1] != NULL)
 // printf("Process creates with args: %s\n",args[1]);
-		if (execve (args[0],args,0)==err){
-			printf("Command not found\n");
+		if (execve (args[0],args,args)==err){
+			
+			printf("Command not found");
+printf("\n");
 			//kill(getpid(),SIGTERM);
 		}
 	  
@@ -516,12 +510,12 @@ int listall()
     // for readdir() 
     while ((de = readdir(dr)) != NULL) 
 	{
-            printf("user@%s:%s                 %s", hostn, getcwd(currentDirectory, 1024),de->d_name); 
-	   printf("\n");
+            printf("   %s",  de->d_name); 
+	  // printf("\n");
 	}
  
     closedir(dr);
-  
+ 
     return 0; 
 
 }		
@@ -688,7 +682,40 @@ size_t getline(FILE *stream, char *buf, size_t size)
     buf[count] = '\0';
     return count;
 }
-
+#include <stdio.h>
+#define MAX_LEN 128
+ 
+void print_image(FILE *fptr);
+ 
+int image(void)
+{
+    char *filename = "image.txt";
+    FILE *fptr = NULL;
+ 	
+    if((fptr = fopen(filename,"r")) == NULL)
+    {
+        fprintf(stderr,"error opening %s\n",filename);
+        return 1;
+    }
+ 
+    print_image(fptr);
+ 
+    fclose(fptr);
+ 
+    return 0;
+}
+ 
+void print_image(FILE *fptr)
+{
+    char read_string[MAX_LEN];
+ printf("\n\n\n\n\n\n\n\n");
+    while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+	{
+        	printf("%s",read_string);
+		
+	}
+ 
+}
 int main(int argc, char *argv[], char ** envp) {
 	char line[MAXLINE]; // buffer for the user input
 	char * tokens[LIMIT]; // array for the different tokens in the command
@@ -699,30 +726,24 @@ int main(int argc, char *argv[], char ** envp) {
 	pid = -10; // we initialize pid to an pid that is not possible
 	
 	// We call the method of initialization and the welcome screen
-	//init();
+	// init();
 	//welcomeScreen();
     
     // We set our extern char** environ to the environment, so that
     // we can treat it later in other methods
 	environ = envp;
-	
-	// We set shell=<pathname>/simple-c-shell as an environment variable for
-	// the child
-	//setenv("shell",getcwd(currentDirectory, 1024),1);
-	
-	// Main loop, where the user input will be read and the prompt
-	// will be printed
+	image();
+	//printf("\n");
+
 	while(TRUE){
-		// We print the shell prompt if necessary
-	//  shellPrompt();
 	char hostn[1204] = "";
 	 gethostname(hostn, sizeof(hostn));
+//memset ( line, '\0', MAXLINE );
+	 printf("user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
 
-	if (dont_print_prompt == 1) printf(" user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
-no_reprint_prmpt = 0;
-		
+	printf("\n");	
 		// We empty the line buffer
-		memset ( line, '\0', MAXLINE );
+	//	memset ( line, '\0', MAXLINE );
 
 		// We wait for user input
 	
@@ -738,7 +759,7 @@ if (dont_print_prompt == 1)printf("\n");
 		// We read all the tokens of the input and pass it to our
 		// commandHandler as the argument
 		numTokens = 1;
-		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
+		while((tokens[numTokens] = strtok(NULL, " \n")) != NULL) numTokens++;
 		
 	 	commandHandler(tokens);
 		

@@ -598,17 +598,17 @@ static unsigned int inode_write_block(ext2_fs_t * this, ext2_inodetable_t * inod
 		debug_print(WARNING, "Inode %d, Block %d", inode_no, block);
 	}
 
-	debug_print(WARNING, "clearing and allocating up to required blocks (block=%d, %d)", block, inode->blocks);
+	//debug_print(WARNING, "clearing and allocating up to required blocks (block=%d, %d)", block, inode->blocks);
 	char * empty = NULL;
 	while (block >= inode->blocks / (this->block_size / 512)) {
 		allocate_inode_block(this, inode, inode_no, inode->blocks / (this->block_size / 512));
 		refresh_inode(this, inode, inode_no);
 	}
 	if (empty) free(empty);
-	debug_print(WARNING, "... done");
+	//debug_print(WARNING, "... done");
 
 	unsigned int real_block = get_block_number(this, inode, block);
-	debug_print(WARNING, "Writing virtual block %d for inode %d maps to real block %d", block, inode_no, real_block);
+	//debug_print(WARNING, "Writing virtual block %d for inode %d maps to real block %d", block, inode_no, real_block);
 
 	write_block(this, real_block, buf);
 	return real_block;

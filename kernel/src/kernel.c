@@ -122,6 +122,11 @@ memset(p, 0, sizeof(void *) * NUM);
 
 }
 }
+
+ 
+ 
+ 
+
 extern unsigned char  * lfb_vid_memory;
 extern  unsigned short term_width ;    /* Width of the terminal (in cells) */
 extern  unsigned short term_height;
@@ -391,17 +396,20 @@ void kmain(struct multiboot *mbp, u32 magic)
 	while (argv[argc]) {
 		argc++;
 	}
- 
+
+
 	system(argv[0], argc, argv); /* Run init */
- 
- 
+
   	insert_current_task(current_task);
+ 
+
 	DOTASKSWITCH=1;
 
  	 init_netifs();
- 	  socketdemo();
+ 	//  socketdemo();
 	//
-	
+	         
+ 
 for(;;);
 
 }

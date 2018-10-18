@@ -203,13 +203,14 @@ return ret;
 #include <timer.h>
 int serial_printing = 1;
 extern int GRAPHICS_ON;
+#define BUFFERSIZE 12345
 void printk(const char *fmt, ...)
 {
 
 	va_list ap;
-	va_start(ap, fmt);
+	//va_start(ap, fmt);
 	// vprintf(fmt, ap);
-	va_end(ap);
+	//va_end(ap);
     // update_cursor();
 
 static char * c_messages[] = {
@@ -221,23 +222,23 @@ static char * c_messages[] = {
 	" \033[1;31;44mINSANE\033[0m:"
 };
 
-static char buffer[1024];
+ 
 va_list args;
 	//unsigned long flags;
 	int printed_len;
 	char *p;
-	static char printk_buf[81920];
+	static char printk_buf[BUFFERSIZE];
 	static int log_level_unknown = 1;
-static char newbuf[81921];
+static char newbuf[BUFFERSIZE];
 	va_start(args, fmt);
 //char buf[100] = {"\033[1;35mNOTICE\033[0m:"};
 
-
+ memset(printk_buf,0,BUFFERSIZE);
 	printed_len = vsnprintf( printk_buf, sizeof(printk_buf) , fmt, args);
 
  
 va_end(args);
-
+ memset(newbuf,0,BUFFERSIZE);
 		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf );
 
 if(serial_printing)
@@ -256,13 +257,8 @@ if(serial_printing)
   if(GRAPHICS_ON == 1)
 {
 static char newbuf[4][81912];
- sprintf(newbuf[0] , "[");
- list3[0] =   newbuf[0];
+ 
 
- sprintf(newbuf[2] , "]");
-  list3[2] =   newbuf[2];
- 
- 
 sprintf(newbuf[1] , "%s", printk_buf);
 
 list3[1] =   newbuf[1];

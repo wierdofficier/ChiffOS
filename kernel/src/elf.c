@@ -14,10 +14,11 @@ extern list_t * process_list;
 void
 enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack,task_t * new_task) {
 	//IRQ_OFF;
- set_kernel_stack(new_task->image.user_stack);
+ //set_kernel_stack(new_task->image.user_stack);
 printk("new_task->image.user_stack %x \n", new_task->image.user_stack);
  
- 
+	//*((unsigned int *)(new_task->image.user_stack - 8)) = (unsigned int )argv;
+//	*((unsigned int *)(new_task->image.user_stack - 8)) = (unsigned int )argc;
         create_user_task(location, new_task,argc,argv);
  	// *((unsigned int  *)(new_task->image.user_stack - 0)) = (unsigned int )envp;
 

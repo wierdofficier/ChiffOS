@@ -207,7 +207,7 @@ void close_fs(fs_node_t *node) {
 	//spin_lock(tmp_refcount_lock);
 	node->refcount--;
 	if (node->refcount == 0) {
-		debug_print(NOTICE, "Node refcount [%s] is now 0: %d", node->name, node->refcount);
+		//debug_print(NOTICE, "Node refcount [%s] is now 0: %d", node->name, node->refcount);
 
 		if (node->close) {
 			node->close(node);

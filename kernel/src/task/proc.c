@@ -194,15 +194,15 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	kernel_stack->eflags = eflags;
 	kernel_stack->cs = code_segment;
 	kernel_stack->eip = (u32)entry;
-	kernel_stack->err_code = argc;
-	kernel_stack->int_no = argc;
-	kernel_stack->eax = argc;
+	kernel_stack->err_code = 0;
+	kernel_stack->int_no = 0;
+	kernel_stack->eax = 0;
 	kernel_stack->ecx = (uintptr_t)argv;
 	kernel_stack->edx = argc;
-	kernel_stack->ebx = argc;
-	kernel_stack->ebp = argc;
-	kernel_stack->esi = argc;
-	kernel_stack->edi = argc;
+	kernel_stack->ebx = 0;
+	kernel_stack->ebp = 0;
+	kernel_stack->esi = 0;
+	kernel_stack->edi = 0;
 
 	if(privilege == 3) data_segment = 0x23;
 		kernel_stack->ds = data_segment;
@@ -492,8 +492,8 @@ current_task->eip = r->eip;
 current_task->esp = esp;
  task_t* oldTask = current_task; 
 	//current_task = list_find(process_list, (void *)current_task);
- 	//   current_task = next_ready_process();
-	 current_task = get_current_task();
+ 	    current_task = next_ready_process();
+	// current_task = get_current_task();
   //list_insert(process_list, (void *)new_task);
  if(oldTask == current_task) return esp; // No task switch because old==new
 

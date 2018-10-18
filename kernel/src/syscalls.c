@@ -129,7 +129,7 @@ static int sys_gettimeofday(struct timeval * tv, void * tz) {
 
 	return gettimeofday(tv, tz);
 }
-static int sys_open(const char * file, int flags, int mode) {
+  int sys_open(const char * file, int flags, int mode) {
 	PTR_VALIDATE(file);
 	debug_print(NOTICE, "open(%s) flags=0x%x; mode=0x%x", file, flags, mode);
  
@@ -167,7 +167,7 @@ static int sys_open(const char * file, int flags, int mode) {
 	debug_print(INFO, "[open] pid=%d %s -> %d", getpid(), file, fd);
 	return fd ;
 }
-static int sys_openpty(int * master, int * slave, char * name, void * _ign0, void * size) {
+  int sys_openpty(int * master, int * slave, char * name, void * _ign0, void * size) {
 	/* We require a place to put these when we are done. */
 	if (!master || !slave) return -1;
 	if (master && !PTR_INRANGE(master)) return -1;
@@ -477,13 +477,15 @@ USING_STDIO = 1;
 	}
 
 	int ret = 0;
-int n = 0;
+int n = char_width*2;
 	while (p < (char *)buf + length - 1 /* NULL termination */) {
 		char c = getchar();
 
 		if (c >= ' ' ) {
 			n+=char_width;
-			write_char(xxx+n, yy-char_height, c, 0x11ffff00);
+			write_char(xxx+n, yy-char_height, c, 0x00ffff00);
+			 
+			
 			  if(c == 'n')
 			{
 				//while(1)
@@ -535,7 +537,7 @@ int n = 0;
 
 	return ret;
 }
-static int sys_read(int fd, char * ptr, int len) {
+  int sys_read(int fd, char * ptr, int len) {
  //puts_g( ptr);
  //
 if(fd == 0)
@@ -581,7 +583,7 @@ static int sys_gettid(void) {
 	return getpid();
 }
 
-static int sys_close(int fd) {
+  int sys_close(int fd) {
 	if (FD_CHECK(fd)) {
 		close_fs(FD_ENTRY(fd));
 		FD_ENTRY(fd) = NULL;
@@ -619,7 +621,7 @@ static int sys_yield(void) {
 static int sys_chdir(char * newdir) {
 	PTR_VALIDATE(newdir);
 	char * path = canonicalize_path(current_task->wd_name, newdir);
-	fs_node_t * chd = kopen(path, 0);
+	fs_node_t * chd = kopen2(path, 0);
 	if (chd) {
 		if ((chd->flags & FS_DIRECTORY) == 0) {
 			close_fs(chd);
