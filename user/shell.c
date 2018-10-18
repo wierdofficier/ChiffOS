@@ -708,7 +708,7 @@ int image(void)
 void print_image(FILE *fptr)
 {
     char read_string[MAX_LEN];
- printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+ printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     while(fgets(read_string,sizeof(read_string),fptr) != NULL)
 	{
         	printf("%s",read_string);
@@ -741,7 +741,7 @@ image();
 	char hostn[1204] = "";
 	 gethostname(hostn, sizeof(hostn));
 //memset ( 0x1400000, '\0', 0x1400000);
-  printf("                user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
+  printf("                   user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
  
  
 	printf("\n");	

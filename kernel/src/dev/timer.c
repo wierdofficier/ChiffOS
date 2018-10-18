@@ -56,7 +56,7 @@ static int behind = 0;
 /*
  * IRQ handler for when the timer fires
  */
- 
+ extern list_t * process_list;
 extern int boot_time;
 
  u32 timer_handle(u32 esp)
@@ -74,15 +74,23 @@ timerticks++;
 }
 
 
-if(current_task->time_to_run > 0) 
+if( current_task->time_to_run > 0) 
 {
   current_task->time_to_run--;
 task_switching = 0;
 }
 else
    {
-	 task_switching = 1;
+	
+   task_switching = 1;
+	//	 	   current_task->time_to_run = 10;
+ //current_task=	next_ready_process();
  
+			//  list_insert(process_list,   current_task);
+		//	 make_process_ready(current_task);
+// printk("getpid() returns = %d \n", getpid());
+
+	
 
 
  

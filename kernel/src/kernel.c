@@ -400,17 +400,17 @@ void kmain(struct multiboot *mbp, u32 magic)
 		argc++;
 	}
 
+ 	DOTASKSWITCH=1;
+  // TASK_testing();
 
-	system(argv[0], argc, argv); /* Run init */
+
+ init_netifs();
+ 	    socketdemo();
+	 system(argv[0], argc, argv); /* Run init */
 
   	 //insert_current_task(current_task);
- 
- // TASK_testing();
-	DOTASKSWITCH=1;
 
- //	 init_netifs();
- 	//  socketdemo();
-	//
+	///
 	         
  
 for(;;);

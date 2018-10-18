@@ -63,7 +63,7 @@ void _task_initialize(void)
 	tree_set_root(process_list, (void *)current_task);
 	/* Set its tree entry pointer so we can keep track
 	 * of the process' entry in the process tree. */
-	 current_task->tree_entry = process_tree->root;
+//	 current_task->tree_entry = process_tree->root;
 	current_task->id      = 0;       /* Init is PID 1 */
 	current_task->group   = 0;
 	current_task->name    = strdup("init");  /* Um, duh. */
@@ -116,9 +116,9 @@ void _task_initialize(void)
  	tree_node_create(current_task);
 	//
  
-	//scheduler_install();
-	//  insert_current_task(current_task);
-	  list_insert(process_list,  current_task);
+	 scheduler_install();
+	   insert_current_task(current_task);
+	//  list_insert(process_list,  current_task);
 // make_process_ready(current_task);
 	 __asm__ __volatile__("sti");
 
@@ -143,7 +143,7 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	//memset(new_task, 0, sizeof(task_t));
 	new_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
 	
-    printk("argc = %d :: argv %s \n", argc,argv);
+   // printk("argc = %d :: argv %s \n", argc,argv);
 	new_task->state = TASK_RUNNING;
 	
 		current_task->priority = priority;
@@ -215,8 +215,8 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 	new_task->id = pid++;
 	
 	task_switching = true;
-	insert_current_task(new_task);
- 	list_insert(process_list,   new_task);
+ 	insert_current_task(new_task);
+ 	//list_insert(process_list,   new_task);
 //make_process_ready(new_task);
 	__asm__ __volatile__("sti");	
 }
@@ -225,7 +225,9 @@ int sys_yield(void) ;
 void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** argv,u8 privilege, int priority,task_type type)
 {	
 	__asm__ __volatile__("cli");
-	
+struct regs r;
+		memcpy(&r, current_task->syscall_registers, sizeof(struct regs));
+ new_task->syscall_registers = &r;
 	//task_switching = false;
 	new_task->esp = 0;
         new_task->eip = 0;
@@ -381,10 +383,10 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 		
 	kernel_stack->eflags = eflags;
 	kernel_stack->cs = code_segment;
-	kernel_stack->eip = (u32)entry;
+	new_task->syscall_registers->eip = (u32)entry;
 	 kernel_stack->err_code = 0;
 	kernel_stack->int_no = 0;
-	kernel_stack->eax = 0;
+	new_task->syscall_registers->eax = 0;
 	kernel_stack->ecx = (uintptr_t)argv;
 	kernel_stack->edx = argc;
 	kernel_stack->ebx = 0;
@@ -397,20 +399,19 @@ void _get_task_stackFORK(task_t *new_task,void (*entry)(),size_t argc, char** ar
 	kernel_stack->es = data_segment;
 	kernel_stack->fs = data_segment;
 	kernel_stack->gs = data_segment;
-	new_task->syscall_registers = (struct regs__*)kernel_stack;
+	//new_task->syscall_registers = (struct regs__*)kernel_stack;
 	new_task->eip = (u32)entry;
 
 
-struct regs r;
 
-	memcpy(&r, new_task->syscall_registers, sizeof(struct regs));
-//new_task->syscall_registers = &r;
+
+
 	new_task->esp = (u32)new_task->syscall_registers; 
 	new_task->id = pid++;
 	
 	task_switching = true;
-	// insert_current_task(new_task);
- list_insert(process_list, (void *)new_task);
+	  insert_current_task(new_task);
+ //list_insert(process_list, (void *)new_task);
 // make_process_ready(new_task);
 	__asm__ __volatile__("sti");
 	
@@ -442,7 +443,7 @@ void create_user_task_new(void (*thread)() )
 	_get_task_stack(new_task,thread,0,0,3,PRIO_HIGH,THREAD);
 	//sleep2(40);
 }
-int DOTASKSWITCH = 0;
+int DOTASKSWITCH = 1;
 void create_task_thread(void (*thread)(),int priority)
 {
  
@@ -483,16 +484,18 @@ task_t * next_ready_process(void) {
 
 u32 _task_switch(u32 esp)
 {
-
+ 
 if(DOTASKSWITCH == 0)
 return esp;
 
 if(!current_task) return esp;
  if(current_task->time_to_run == 0)
 		{
+			
 			// current_task->time_to_run = 4;
-			// list_insert(process_list,   current_task);
-//printk("getpid() returns = %d \n", getpid());
+	//		  current_task->time_to_run = 10;
+ //current_task=	next_ready_process();
+ //printk("getpid() returns = %d \n", getpid());
 	
 	}
 struct regs *r = (struct regs*)esp;
@@ -500,8 +503,9 @@ current_task->eip = r->eip;
 current_task->esp = esp;
  task_t* oldTask = current_task; 
 	//current_task = list_find(process_list, (void *)current_task);
- 	    current_task = next_ready_process();
-	// current_task = get_current_task();
+ 	//    current_task = next_ready_process();
+ //make_process_ready(current_task);
+	 current_task = get_current_task();
   //list_insert(process_list, (void *)new_task);
  if(oldTask == current_task) return esp; // No task switch because old==new
 
@@ -568,14 +572,14 @@ printk("sleep1\n");
 
 void switch_context() 
  	{
- 	if(scheduler_shouldSwitchTask()) 
+ 	 if(scheduler_shouldSwitchTask()) 
  	__asm__ volatile("int $0x20");
- 	else
- 	{
-	printk("HTL!!\n");
- 	__asm__ volatile("hlt");
- 	__asm__ volatile("int $0x20");
- 	}
+ 	 else
+ 	 {
+	 printk("HTL!!\n");
+ 	 __asm__ volatile("hlt");
+ 	  __asm__ volatile("int $0x20");
+ 	 }
  	}
 
 
@@ -939,11 +943,11 @@ void make_process_ready(task_t * proc) {
 		if (proc->sleep_node.owner == sleep_queue) {
 			/* XXX can't wake from timed sleep */
 			if (proc->timed_sleep_node) {
-				IRQ_OFF;
+				//IRQ_OFF;
 				//spin_lock(sleep_lock);
 				list_delete(sleep_queue, proc->timed_sleep_node);
 				//spin_unlock(sleep_lock);
-				IRQ_RES;
+				//IRQ_RES;
 				proc->sleep_node.owner = NULL;
 				free(proc->timed_sleep_node->value);
 			}
@@ -1327,9 +1331,43 @@ task_switching == 1;
  * Call task_exit() and immediately STOP if we can't.
  */
 void kexit(int retval) {
+  __asm__ __volatile__("cli");
+	current_task->priority = PRIO_DEAD;
+	current_task->time_to_run = 0;
+    current_task->ready_to_run = 0;
+	task_t* tmp_task = (task_t*)ready_queue;
+    do
+    {
+        if(tmp_task->next == current_task)
+        {
+            tmp_task->next = current_task->next;
+        }
+        if(tmp_task->next)
+        {
+            tmp_task = tmp_task->next;
+        }
+    }
+    while (tmp_task->next);
+	delete_current_task(current_task);
+  
+    free((void *)((u32)current_task->kernel_stack - KERNEL_STACK_SIZE)); 
+    free((void *)current_task);
  
-	task_exit(retval);
-	debug_print(CRITICAL, "Process returned from task_exit! Environment is definitely unclean. Stopping.");
+    __asm__ __volatile__("sti");
+	counter--;
+  //list_delete(process_list,current_task);
+ //	bitset_clear(&pid_set, current_task->id);
+	 task_switching = 1; 
+	//;
+ 
+  //reap_process(current_task);
+ free(current_task->name);
+ 
+exit_once = 0;
+task_switching = 1; 
+switch_context();
+//	task_exit(retval);
+	//debug_print(CRITICAL, "Process returned from task_exit! Environment is definitely unclean. Stopping.");
 	 
 }
 void set_process_environment(task_t * proc, page_directory_t * directory) {

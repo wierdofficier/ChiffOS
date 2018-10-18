@@ -228,6 +228,8 @@ int iterator = 0;
 extern volatile task_t * copytask;
 u32 isr_handler(u32 esp)
 {
+
+ 
 	struct regs *r = (struct regs*)esp;
 	
 	u32 (*handler)(struct regs *r); 
@@ -289,8 +291,8 @@ if(r->int_no < 32)
 
 		uint32_t faulting_address;
 	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-	 //printk("faulting_address %x\n", faulting_address);
-	 
+	 printk("faulting_address %x\n", faulting_address);
+	  kexit(1);
 		 	
 	}
 	return esp;
@@ -299,11 +301,11 @@ if(r->int_no < 32)
 
 u32 irq_handler(u32 esp) 
 {
-	
+		if(task_switching == 1)
+		esp = _task_switch(esp);
 	struct regs *r = (struct regs*)esp;
 	
-	if(task_switching == 1)
-		esp = _task_switch(esp);
+
  
 	u32 (*handler)(struct regs *r); 
 	

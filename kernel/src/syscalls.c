@@ -800,7 +800,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	//    printk("regs nr: %d\n",r->eax);
+	 //    printk("regs nr: %d\n",r->eax);
 
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;

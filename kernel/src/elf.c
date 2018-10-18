@@ -4,7 +4,7 @@
 #include <elf.h>
 #include <process.h>
 #include <logging.h>
-#define USER_STACK_BOTTOM 0x110000
+#define USER_STACK_BOTTOM 0x190000
 #define USER_STACK_TOP    0x190000
 #define SHM_START 0x190000
 #define PUSH(stack, type, item) stack -= sizeof(type); \
@@ -14,7 +14,7 @@ extern list_t * process_list;
 void
 enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack,task_t * new_task) {
 	//IRQ_OFF;
- //set_kernel_stack(new_task->image.user_stack);
+// set_kernel_stack(new_task->image.user_stack);
 printk("new_task->image.user_stack %x \n", new_task->image.user_stack);
  
 	//*((unsigned int *)(new_task->image.user_stack - 8)) = (unsigned int )argv;
@@ -159,10 +159,10 @@ if (header.e_ident[0] != ELFMAG0 ||
 	/* Allocate space for a new process */
 	 
 	/* Set it as the root process */
-	tree_set_root(process_tree, (void *)new_task);
+	//tree_set_root(process_tree, (void *)new_task);
 	/* Set its tree entry pointer so we can keep track
 	 * of the process' entry in the process tree. */
-	new_task->tree_entry = process_tree->root;
+	//new_task->tree_entry = process_tree->root;
 	new_task->id      = 1;       /* Init is PID 1 */
 	new_task->group   = 0;
 	new_task->name    = strdup("init");  /* Um, duh. */
@@ -368,7 +368,7 @@ static int matches(unsigned char * a, unsigned char * b, unsigned int len) {
  * @param argc Number of arguments (because I'm not counting for you)
  * @param argv Pointer to a string of arguments
  */
-int init_once = 1;
+int init_once = 0;
 extern fs_node_t * fnodeGLOBAL;
 task_t * new_task__;
 int exec(
