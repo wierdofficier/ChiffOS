@@ -19,8 +19,8 @@ tree_t    * fs_tree = NULL; /* File system mountpoint tree */
 fs_node_t * fs_root = NULL; /* Pointer to the root mount fs_node (must be some form of filesystem, even ramdisk) */
 
 hashmap_t * fs_types = NULL;
-
-
+extern int DOTASKSWITCH;
+int debug_print() { if(DOTASKSWITCH== 0) {printk(".");}}
 int has_permission(fs_node_t * node, int permission_bit) {
 	if (!node) return 0;
 
@@ -508,7 +508,7 @@ int readlink_fs(fs_node_t *node, char * buf, uint32_t size) {
 char *canonicalize_path(char *cwd, char *input) {
 	/* This is a stack-based canonicalizer; we use a list as a stack */
 	list_t *out = list_create();
-printk("cwd = %s :: input = %s\n",cwd,input);
+ 
 	/*
 	 * If we have a relative path, we need to canonicalize
 	 * the working directory and insert it into the stack.
@@ -537,16 +537,16 @@ printk("cwd = %s :: input = %s\n",cwd,input);
 		}
 		free(path);
 	}
-printk("cwd = %s :: input = %s\n",cwd,input);
+ 
 	/* Similarly, we need to push the elements from the new path */
 	char *path = malloc((strlen(input) + 1) * sizeof(char));
 	memcpy(path, input, strlen(input) + 1);
-printk("cwd = %s :: input = %s\n",cwd,input);
+ 
 	/* Initialize the tokenizer... */
 	char *pch;
 	char *save;
 	pch = strtok_r(path,PATH_SEPARATOR_STRING,&save);
-printk("cwd = %s :: input = %s\n",cwd,input);
+ 
 	/*
 	 * Tokenize the path, this time, taking care to properly
 	 * handle .. and . to represent up (stack pop) and current

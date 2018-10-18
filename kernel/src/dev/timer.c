@@ -77,11 +77,15 @@ timerticks++;
 if(current_task->time_to_run > 0) 
 {
   current_task->time_to_run--;
+task_switching = 0;
 }
 else
    {
-	task_switching = 1;
+	 task_switching = 1;
+ 
 
+
+ 
         }
 
 	return esp;
@@ -167,4 +171,4 @@ void relative_time(unsigned long seconds, unsigned long subseconds, unsigned lon
  
 int process_alert_node() {}
 #include <logging.h>
-int assert(char *buf) { printk( buf); }
+int assert(char *buf) {  }

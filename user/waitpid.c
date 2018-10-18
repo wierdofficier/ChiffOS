@@ -8,10 +8,13 @@
 int main(int argc, char **argv) {
 
 	int pid = fork();
+	printf("HELLO WORLD\n");	
+	
+		for(;;);
 	if (pid == 0) {
 		// Child
 		printf("in child, pid = %d, ppid = %d\n", getpid(), getppid());
-		sleep(2);
+		 sleep(2);
 	}
 	else if (pid > 0) {
 		// Parent

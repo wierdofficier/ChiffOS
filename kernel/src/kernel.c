@@ -363,8 +363,11 @@ void kmain(struct multiboot *mbp, u32 magic)
 	printk("Initializing tasking... ");
         _task_initialize();
  	printk("[ok]\n");
+
 	// create_task_thread(start_graphics_daemon,PRIO_HIGH); 
-	// TASK_testing();
+	 // TASK_testing();
+
+ 
 	// for(;;);
 	shm_install();
 	map_vfs_directory("/dev");
@@ -400,12 +403,12 @@ void kmain(struct multiboot *mbp, u32 magic)
 
 	system(argv[0], argc, argv); /* Run init */
 
-  	insert_current_task(current_task);
+  	 //insert_current_task(current_task);
  
-
+ // TASK_testing();
 	DOTASKSWITCH=1;
 
- 	 init_netifs();
+ //	 init_netifs();
  	//  socketdemo();
 	//
 	         

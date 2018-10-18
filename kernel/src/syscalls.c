@@ -21,7 +21,7 @@ typedef unsigned int user_t;
  uint32_t read_ext2(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer);
 extern volatile task_t * current_task;
 void halt_and_catch_fire(char * error_message, const char * file, int line, struct regs * regs) {
-	IRQ_OFF;
+	//IRQ_OFF;
 	debug_print(ERROR, "HACF: %s", error_message);
 	debug_print(ERROR, "Proc: %d", getpid());
 	debug_print(ERROR, "File: %s", file);
@@ -37,7 +37,7 @@ void halt_and_catch_fire(char * error_message, const char * file, int line, stru
 		debug_print(ERROR, "eip=0x%x",          regs->eip);
 	}
 	debug_print(ERROR, "This process has been descheduled.");
-	for(;;);
+	//for(;;);
 	//kexit(1);
 }
 #define HALT_AND_CATCH_FIRE(mesg, regs) halt_and_catch_fire(mesg, __FILE__, __LINE__, regs)
@@ -498,6 +498,7 @@ int n = char_width*2;
 		}
 		else if (c == '\b') {
 			if (p > (char *)buf) {
+			write_char(xxx+n, yy-char_height, ' ', 0);
 				p--;
 				n+=char_width;
 			//	write_char(xxx+n, yy-char_height, c, 0x11ffff00);
@@ -593,9 +594,7 @@ static int sys_gettid(void) {
 }
 
  static int sys_waitpid(int pid, int * status, int options) {
-	if (status && !PTR_INRANGE(status)) {
-		return -EINVAL;
-	}
+ 
 	return waitpid(pid, status, options);
 }
 static int sys_readdir(int fd, int index, struct dirent * entry) {
@@ -614,8 +613,8 @@ static int sys_readdir(int fd, int index, struct dirent * entry) {
 	return -1;
 }
 
-static int sys_yield(void) {
-	_task_switch(1);
+  int sys_yield(void) {
+	switch_context( );
 	return 1;
 }
 static int sys_chdir(char * newdir) {
@@ -687,7 +686,7 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 
 	debug_print(INFO,"Executing...");
 	/* Discard envp */
-	printk("argc = %d :: argv_ %s \n", argc,argv_);
+	//printk("argc = %d :: argv_ %s \n", argc,argv_);
 	exec((char *)filename, argc, (char **)argv_, (char **)envp_);
 	return -1;
 }
@@ -764,7 +763,7 @@ void * sbrk(uintptr_t increment);
 &sleep2,
 &sys_ioctl,
 &sys_access,
-&nop,
+&sys_stat,
 &nop,
 &nop,
 &nop,
@@ -801,7 +800,7 @@ void * sbrk(uintptr_t increment);
  
 void syscall_handler(struct regs *r)
 {
-	     //printk("regs nr: %d\n",r->eax);
+	//    printk("regs nr: %d\n",r->eax);
 
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;

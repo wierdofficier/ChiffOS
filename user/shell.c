@@ -708,7 +708,7 @@ int image(void)
 void print_image(FILE *fptr)
 {
     char read_string[MAX_LEN];
- printf("\n\n\n\n\n\n\n\n");
+ printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     while(fgets(read_string,sizeof(read_string),fptr) != NULL)
 	{
         	printf("%s",read_string);
@@ -716,6 +716,7 @@ void print_image(FILE *fptr)
 	}
  
 }
+int one_in_two = 1;
 int main(int argc, char *argv[], char ** envp) {
 	char line[MAXLINE]; // buffer for the user input
 	char * tokens[LIMIT]; // array for the different tokens in the command
@@ -732,15 +733,17 @@ int main(int argc, char *argv[], char ** envp) {
     // We set our extern char** environ to the environment, so that
     // we can treat it later in other methods
 	environ = envp;
-	image();
+	
 	//printf("\n");
-
+memset((void *)(uintptr_t )0xfd000000,0, (1268-4) * (1024-4) * 12);
+image();
 	while(TRUE){
 	char hostn[1204] = "";
 	 gethostname(hostn, sizeof(hostn));
-//memset ( line, '\0', MAXLINE );
-	 printf("user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
-
+//memset ( 0x1400000, '\0', 0x1400000);
+  printf("                user@%s:%s", hostn, getcwd(currentDirectory, 1024)); 
+ 
+ 
 	printf("\n");	
 		// We empty the line buffer
 	//	memset ( line, '\0', MAXLINE );
@@ -752,9 +755,9 @@ int main(int argc, char *argv[], char ** envp) {
 		// fgets(line, MAXLINE, stdin);
 		  getline(stdin,line,MAXLINE);
 		 
-if (dont_print_prompt == 1)printf("\n");
+ 
 		// If nothing is written, the loop is executed again
-		if((tokens[0] = strtok(line," \n\t")) == NULL) continue;
+		if((tokens[0] = strtok(line," \n")) == NULL) continue;
 		
 		// We read all the tokens of the input and pass it to our
 		// commandHandler as the argument

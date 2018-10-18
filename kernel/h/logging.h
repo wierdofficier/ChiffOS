@@ -20,7 +20,7 @@ extern int failures ;
 #endif
 
  
-#define debug_print(level, ...) printk( __VA_ARGS__)
+//#define debug_print(level, ...) printk( __VA_ARGS__)
  
  
  

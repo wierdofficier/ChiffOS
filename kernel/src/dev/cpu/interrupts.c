@@ -286,11 +286,12 @@ if(r->int_no < 32)
 		//printk("INT=%02dd ERR_CODE=0x%x DS=%x\n", r->int_no, r->err_code, r->ds);
 		//printk("\n");
 		//sleep2(2);
+
 		uint32_t faulting_address;
 	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-	// printk("faulting_address %x\n", faulting_address);
+	 //printk("faulting_address %x\n", faulting_address);
 	 
-		 //exit();	
+		 	
 	}
 	return esp;
 	
@@ -301,9 +302,9 @@ u32 irq_handler(u32 esp)
 	
 	struct regs *r = (struct regs*)esp;
 	
-	if(task_switching)
+	if(task_switching == 1)
 		esp = _task_switch(esp);
-task_switching = 0;
+ 
 	u32 (*handler)(struct regs *r); 
 	
 	handler = irq_routines[r->int_no - 32];	

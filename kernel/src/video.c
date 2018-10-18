@@ -233,12 +233,12 @@ static char newbuf[BUFFERSIZE];
 	va_start(args, fmt);
 //char buf[100] = {"\033[1;35mNOTICE\033[0m:"};
 
- memset(printk_buf,0,BUFFERSIZE);
+ 
 	printed_len = vsnprintf( printk_buf, sizeof(printk_buf) , fmt, args);
 
  
 va_end(args);
- memset(newbuf,0,BUFFERSIZE);
+ 
 		 sprintf(newbuf , "[%10d.%3d:%s:%d]%s %s\n", timerticks, timerticks, "DEBUG", __LINE__, c_messages[0], printk_buf );
 
 if(serial_printing)
