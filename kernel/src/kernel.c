@@ -122,8 +122,71 @@ memset(p, 0, sizeof(void *) * NUM);
 
 }
 }
+size_t strftime(char *s, size_t max, const char *fmt, const struct tm *tm);
+void print_time(void) {
+	struct timeval now;
+	struct tm * timeinfo;
+	char clocktime[10];
 
+	gettimeofday(&now, NULL);
+	timeinfo = localtime((time_t *)&now.tv_sec);
+	strftime(clocktime, 80, "%H:%M:%S", timeinfo);
+
+	 
+}
+extern unsigned char  * lfb_vid_memory;
+
+unsigned int* DOUBLEBUFFER_vbe;
+unsigned int *SCREEN;
+ void allocDoubleBuffer_vbe() 
+{
+    DOUBLEBUFFER_vbe = (unsigned char*) malloc(1268*1024*12);   
+}
+
+void SwapBuffers_vbe(int x)
+{
+	//memcpy(SCREEN, DOUBLEBUFFER_vbe, 1268*1024*12);
+ memset((void *)(uintptr_t )(SCREEN+(0x20 * 8 + 0x20) * 12),0, (0x20) * (0x20) * 0x20*3);
+}
+
+ void IdleTask_kernel()
+{
+static char newbuf[4][81912];
  
+char ** buf = {"testing\n" };
+  char *list4[11];
+int x = 0;
+int dec_x = 0;
+ while(1)
+{
+	static char newbuf[4][81912];
+ 	struct timeval now;
+	struct tm * timeinfo;
+	char clocktime[10];
+
+	gettimeofday(&now, NULL);
+	timeinfo = localtime((time_t *)&now.tv_sec);
+	strftime(clocktime, 80, "%H:%M:%S", timeinfo);
+
+sprintf(newbuf[1] , "%s", clocktime);
+
+list4[1] =   newbuf[1];
+  puts_d( list4,0 ,0x0);
+
+if(x > 1268)
+	  dec_x = 1;
+else if(x < 0)
+    dec_x = 0;
+if(dec_x == 0)
+x++;
+else
+   x--;
+  sleep2(10);
+ 
+ SwapBuffers_vbe(x);
+// memset((uintptr_t )0xfd000000+(0x20 * 8 + 0x20) * 12,0,  100000);
+}
+}
  
  
 
@@ -332,7 +395,7 @@ void kmain(struct multiboot *mbp, u32 magic)
  	printk("Initializing initrd... ");
  	//fs_root = install_initrd(initrd_location);
         printk("[ok]\n");
-	initialize_process_tree();
+	
 	char * cmdline;
 
 	char cmdline_[1024];
@@ -361,6 +424,7 @@ void kmain(struct multiboot *mbp, u32 magic)
 }
 
 	printk("Initializing tasking... ");
+initialize_process_tree();
         _task_initialize();
  	printk("[ok]\n");
 
@@ -401,11 +465,12 @@ void kmain(struct multiboot *mbp, u32 magic)
 	}
 
  	DOTASKSWITCH=1;
-  // TASK_testing();
-
-
- init_netifs();
- 	    socketdemo();
+  //TASK_testing();
+allocDoubleBuffer_vbe();
+SCREEN = lfb_vid_memory;
+create_task_thread(IdleTask_kernel,PRIO_HIGH);
+  init_netifs();
+ //	    socketdemo();
 	 system(argv[0], argc, argv); /* Run init */
 
   	 //insert_current_task(current_task);

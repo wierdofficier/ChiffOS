@@ -51,7 +51,7 @@ void _task_initialize(void)
         current_task->next = 0;
         current_task->type = THREAD;
         current_task->priority = PRIO_HIGH;
-        current_task->time_to_run = 2;
+        current_task->time_to_run = 1;
         current_task->ready_to_run = 100;
 	current_task->wd_name = strdup("/");
 	current_task->kernel_stack = (u32)valloc(KERNEL_STACK_SIZE)+KERNEL_STACK_SIZE;
@@ -96,7 +96,7 @@ void _task_initialize(void)
 	/* Process is not finished */
 	current_task->finished = 0;
 	current_task->started = 100;
-	current_task->running = 100;
+	current_task->running = 1;
 	current_task->wait_queue = list_create();
 	current_task->shm_mappings = list_create();
 	current_task->signal_queue = list_create();
@@ -164,7 +164,7 @@ void _get_task_stack(task_t *new_task,void (*entry)(),size_t argc, char** argv,u
 			new_task->time_to_run = 5;
 		break;
 		case PRIO_HIGH:
-			new_task->time_to_run = 2;
+			new_task->time_to_run = 1;
 		break;
 		default:
 			new_task->time_to_run = 100;
@@ -236,7 +236,7 @@ struct regs r;
         new_task->next = 0;
         new_task->type = THREAD;
         new_task->priority = PRIO_HIGH;
-        new_task->time_to_run = 2;
+        new_task->time_to_run = 1;
         new_task->ready_to_run = 100;
 	new_task->wd_name = strdup("/");
 	 
@@ -346,7 +346,7 @@ struct regs r;
 			new_task->time_to_run = 5;
 		break;
 		case PRIO_HIGH:
-			new_task->time_to_run = 2;
+			new_task->time_to_run = 1;
 		break;
 		default:
 			new_task->time_to_run = 100;
@@ -513,7 +513,7 @@ if(current_task->priority == PRIO_LOW)
 			current_task->time_to_run = 3;
    
         if( current_task->priority == PRIO_IDLE)
-			current_task->time_to_run = 2;	
+			current_task->time_to_run = 1;	
 		
 		  
 for (volatile task_t *t = ready_queue; t != 0; t = t->next){
@@ -554,8 +554,8 @@ return current_task->esp;
 
 void sleep2(u32 milliseconds) 
 {	
-printk("sleep1\n");
-	milliseconds = milliseconds*10; 
+ 
+	 
 	const u32 start_ticks = gettickcount();
 	u32 ticks_to_wait = milliseconds / (10 / 1);
  
@@ -564,8 +564,8 @@ printk("sleep1\n");
 
 	current_task->state = TASK_SLEEPING;
 	current_task->wakeup_time = start_ticks + ticks_to_wait;
-printk("sleep1\n");
-	_task_switch(0);
+ 
+	switch_context();
  
 }
 

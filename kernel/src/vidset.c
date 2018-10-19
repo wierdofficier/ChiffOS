@@ -893,9 +893,10 @@ char *strstr(const char *haystack, const char *needle) {
 }
 int xxx;
 extern int USING_STDIO;
-void puts_g(  char **text)
+void puts_g(  char **text, int row, int column)
 {
-	
+if(column != 0)
+	yy =column;	
 	 char * needle;
 
 int num_entries = 3;
@@ -903,7 +904,7 @@ for(int g = 1 ; g < 2; g++)
  {
 
 u32 i = 0;
-int xx = 0;
+int xx = row;
 //int size = strlen(text[2]);
 	while(i < strlen(text[g])-1)
 	{
@@ -981,4 +982,28 @@ void _vesa_initialize()
 	printbuffer->read_ptr = printbuffer->data;	/*both pointers use data array to store its data*/
         printbuffer->write_ptr = printbuffer->data;
 	 
+}
+  unsigned short char_width_d     = 8;    /* Width of a cell in pixels */
+  unsigned short char_height_d    = 16;   /* Height of a cell in pixels */
+void write_char_d(int x, int y, int val, uint32_t color) {
+	if (val > 128) {
+		val = 4;
+	}
+	unsigned short  * c = large_font[val];
+	for (unsigned char  i = 0; i < char_height_d; ++i) {
+		for (unsigned char  j = 0; j < char_width_d; ++j) {
+			if (c[i] & (1 << (15-j))) {
+				set_point(x+j,y+i,color);
+			}
+		}
+	}
+}
+void puts_d(  char **text, int x, int y)
+{
+int i = 0;
+	while(i < strlen(text[1]) )
+	{
+		write_char_d(x  , y, text[1][i++], 1*100000);
+		 x += char_width_d;
+	}
 }

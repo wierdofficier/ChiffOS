@@ -302,7 +302,8 @@ if(r->int_no < 32)
 u32 irq_handler(u32 esp) 
 {
 		if(task_switching == 1)
-		esp = _task_switch(esp);
+			esp = _task_switch(esp);
+task_switching = 0;
 	struct regs *r = (struct regs*)esp;
 	
 

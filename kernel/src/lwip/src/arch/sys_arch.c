@@ -764,6 +764,8 @@ int gethostname(char *name, size_t len)
 
 struct hostent *gethostbyname(const char* name)
 {
+
+	printk("[gethostbyname] name =%s \n", name);
 	return lwip_gethostbyname(name);
 }
 

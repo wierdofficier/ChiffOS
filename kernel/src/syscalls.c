@@ -712,6 +712,7 @@ void sleep2(u32 milliseconds);
 unsigned int ipaddr_addr(const char *cp);
 void kexit(int retval);
 void * sbrk(uintptr_t increment);
+struct hostent *gethostbyname(const char* name);
  void* syscalls[] =
 {
 &kexit,			//0
@@ -794,13 +795,13 @@ void * sbrk(uintptr_t increment);
 &nop,
 &socket,
 &send,
-&nop
+&gethostbyname
 };
  
  
 void syscall_handler(struct regs *r)
 {
-	 //    printk("regs nr: %d\n",r->eax);
+	//     printk("regs nr: %d\n",r->eax);
 
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;

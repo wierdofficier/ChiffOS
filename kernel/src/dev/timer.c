@@ -83,12 +83,7 @@ else
    {
 	
    task_switching = 1;
-	//	 	   current_task->time_to_run = 10;
- //current_task=	next_ready_process();
  
-			//  list_insert(process_list,   current_task);
-		//	 make_process_ready(current_task);
-// printk("getpid() returns = %d \n", getpid());
 
 	
 

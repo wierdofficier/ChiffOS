@@ -18,23 +18,34 @@
            };
 #define SOCK_STREAM	1
 #define AF_INET		2	
-int socketdemo( )
+
+unsigned int inet_addr(char *str)
+{																	
+    int a, b, c, d;
+    char arr[4];
+    sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
+    arr[0] = a; arr[1] = b; arr[2] = c; arr[3] = d;
+    return *(unsigned int *)arr;
+}
+int socketdemo(int argc, char **argv)
 {
     int socket_desc;
     struct sockaddr_in server;
     char *message , server_reply[6000];
-     
+     char test[100] = {"151.177.53.241"};
+	printf("test = %s \n", *test);
+printf("test = %x \n", test);
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
     if (socket_desc == -1)
     {
         printk("Could not create socket");
     }
- 
+ printf("argv[1] = %s \n", argv[1]); 
     //ip address of www.msn.com (get by doing a ping www.msn.com at terminal)
-	// struct hostent *hlist = gethostbyname("exscape.org");
-	//printf("addr = %s \n", hlist->h_addr_list[0]);
-    server.sin_addr.s_addr = 0xF135B197;;// hlist->h_addr_list[0];
+	//   struct hostent *hlist = gethostbyname(argv[1]);
+	// printf("addr   \n" );
+    server.sin_addr.s_addr =   inet_addr("151.177.53.241");
     server.sin_family = AF_INET;
     server.sin_port = htons( 80 );
  
@@ -67,7 +78,7 @@ int socketdemo( )
     return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-	socketdemo();
+	socketdemo(argc,argv);
 }

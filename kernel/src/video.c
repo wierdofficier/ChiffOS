@@ -262,7 +262,7 @@ static char newbuf[4][81912];
 sprintf(newbuf[1] , "%s", printk_buf);
 
 list3[1] =   newbuf[1];
-  puts_g( list3);
+  puts_g( list3,0,0);
  
 }  
 }
