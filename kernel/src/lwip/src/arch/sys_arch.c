@@ -216,13 +216,21 @@ inline   int sem_destroy(sem_t* s)
 
 	return ret;
 }
-
+extern volatile u32 timerticks;
 inline   int sem_wait(sem_t* s, uint32_t ms)
 {
 
 	const int value = (int)s->value;;
 	 
+			if((int)s->value)
+				(int)s->value--;
 
+			sleep(200);
+			return (int)s->value;
+			 //lwip_core_unlock();
+		
+			 		
+		 
 	// task_t* curr_task = per_core(current_task);
 
 	if (BUILTIN_EXPECT(!s, 0))
@@ -237,17 +245,17 @@ next_try1:
 		} else {
 			//s->queue[s->wpos] = curr_task->id;
 			s->wpos = (s->wpos + 1) % MAX_TASKS;
-			//block_current_task();
+			sleep2(1);
 			//spinlock_irqsave_unlock(&s->lock);
 			//reschedule();
 			goto next_try1;
 		}
 	} else {
-		uint32_t ticks = (ms * TIMER_FREQ) / 1000;
-		uint32_t remain = (ms * TIMER_FREQ) % 1000;
+		uint32_t ticks = (ms * 100) / 1000;
+		uint32_t remain = (ms * 100) % 1000;
 
 		if (ticks) {
-			uint64_t deadline = uptime() + ticks;
+			uint64_t deadline = timerticks + ticks;
 
 next_try2:
 			//spinlock_irqsave_lock(&s->lock);
@@ -609,10 +617,17 @@ udelay__(1);
 
 	return 0;
 }
-
+ 
 int connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
-	int ret = lwip_connect(s & ~LWIP_FD_BIT, name, namelen);
+struct sockaddr_in* test = (struct sockaddr_in*)name;
+if(test->sin_family == 0)
+	namelen*2;
+ test->sin_family = 2;
+printk("namelen = %d port=%d : family: %d \n",  namelen,test->sin_port, test->sin_family);
+ 
+ 
+	int ret = lwip_connect(s & ~LWIP_FD_BIT,(struct sockaddr*)test, namelen);
 udelay__(1);
 	if (ret)
 	{
@@ -694,7 +709,10 @@ int socket(int domain, int type, int protocol)
  
 //DOTASKSWITCH = 1;
  //insert_current_task(current_task);
-	  
+	 
+ 
+printk("domain = %d type=%d : protocol: %d \n",  domain,type, protocol);
+ 
   udelay__(1);	  
 printk("domain = %d : type = %d: protocol = %d\n", domain,type,protocol);
 	int fd = lwip_socket(domain, type, protocol);

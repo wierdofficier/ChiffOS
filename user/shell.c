@@ -736,7 +736,7 @@ int main(int argc, char *argv[], char ** envp) {
 	
 	//printf("\n");
 memset((void *)(uintptr_t )0xfd000000,0, (1268-4) * (1024-4) * 12);
-image();
+//image();
 	while(TRUE){
 	char hostn[1204] = "";
 	 gethostname(hostn, sizeof(hostn));

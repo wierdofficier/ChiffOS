@@ -1,14 +1,40 @@
 #include <stdio.h>
- 
+ int wait_loop0 = 10000;
+int wait_loop1 = 6000;
   /* Internet address. */
            struct in_addr {
                unsigned int       s_addr;     /* address in network byte order */
            };
-  struct sockaddr_in {
-               short    sin_family; /* address family: AF_INET */
-               short      sin_port;   /* port in network byte order */
-               struct in_addr sin_addr;   /* internet address */
-           };
+ struct sockaddr {
+  unsigned char        sa_len;
+  unsigned char sa_family;
+  char        sa_data[14];
+};
+void
+udelay_____( int seconds )
+{   // this function needs to be finetuned for the specific microprocessor
+    int i, j, k;
+    for(i = 0; i < seconds; i++)
+    {
+        for(j = 0; j < wait_loop0; j++)
+        {
+            for(k = 0; k < wait_loop1; k++)
+            {   // waste function, volatile makes sure it is not being optimized out by compiler
+                int volatile t = 120 * j * i + k;
+                t = t + 5;
+            }
+        }
+    }
+}
+struct sockaddr_in {
+  unsigned char            sin_len;
+  unsigned char      sin_family;
+  unsigned short       sin_port;
+  struct in_addr  sin_addr;
+#define SIN_ZERO_LEN 8
+  char            sin_zero[8];
+};
+
  struct hostent {
                char  *h_name;            /* official name of host */
                char **h_aliases;         /* alias list */
@@ -18,7 +44,7 @@
            };
 #define SOCK_STREAM	1
 #define AF_INET		2	
-
+int wait() {}
 unsigned int inet_addr(char *str)
 {																	
     int a, b, c, d;
@@ -74,7 +100,7 @@ printf("test = %x \n", test);
  
 	
     printk("%s\n",server_reply);
-     udelay(3);
+     udelay_____(3);
     return 0;
 }
 

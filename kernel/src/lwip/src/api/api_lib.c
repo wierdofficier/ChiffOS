@@ -475,6 +475,7 @@ netconn_accept(struct netconn *conn, struct netconn **new_conn)
 static err_t
 netconn_recv_data(struct netconn *conn, void **new_buf)
 {
+printk("netconn_recv_data 1\n");
   void *buf = NULL;
   u16_t len;
 #if LWIP_TCP
@@ -483,10 +484,11 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
   msg = NULL;
 #endif
 #endif /* LWIP_TCP */
-
+printk("netconn_recv_data 2\n");
   LWIP_ERROR("netconn_recv: invalid pointer", (new_buf != NULL), return ERR_ARG;);
   *new_buf = NULL;
   LWIP_ERROR("netconn_recv: invalid conn",    (conn != NULL),    return ERR_ARG;);
+printk("netconn_recv_data 3\n");
 #if LWIP_TCP
 #if (LWIP_UDP || LWIP_RAW)
   if (NETCONNTYPE_GROUP(conn->type) == NETCONN_TCP)
@@ -497,6 +499,7 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
       return sys_mbox_valid(&conn->acceptmbox) ? ERR_CONN : ERR_CLSD;
     }
   }
+printk("netconn_recv_data 4\n");
 #endif /* LWIP_TCP */
   LWIP_ERROR("netconn_recv: invalid recvmbox", sys_mbox_valid(&conn->recvmbox), return ERR_CONN;);
 
@@ -514,10 +517,13 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
   {
     API_MSG_VAR_ALLOC(msg);
   }
+printk("netconn_recv_data 5\n");
 #endif /* LWIP_TCP */
 
 #if LWIP_SO_RCVTIMEO
+printk("netconn_recv_data 51\n");
   if (sys_arch_mbox_fetch(&conn->recvmbox, &buf, conn->recv_timeout) == SYS_ARCH_TIMEOUT) {
+printk("netconn_recv_data 52\n");
 #if LWIP_TCP
 #if (LWIP_UDP || LWIP_RAW)
     if (NETCONNTYPE_GROUP(conn->type) == NETCONN_TCP)
@@ -526,9 +532,11 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
       API_MSG_VAR_FREE(msg);
     }
 #endif /* LWIP_TCP */
+printk("netconn_recv_data 53\n");
     return ERR_TIMEOUT;
   }
 #else
+printk("netconn_recv_data 54\n");
   sys_arch_mbox_fetch(&conn->recvmbox, &buf, 0);
 #endif /* LWIP_SO_RCVTIMEO*/
 
@@ -540,17 +548,18 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
     /* Let the stack know that we have taken the data. */
     /* @todo: Speedup: Don't block and wait for the answer here
        (to prevent multiple thread-switches). */
+printk("netconn_recv_data 56\n");
     API_MSG_VAR_REF(msg).conn = conn;
     if (buf != NULL) {
       API_MSG_VAR_REF(msg).msg.r.len = ((struct pbuf *)buf)->tot_len;
     } else {
       API_MSG_VAR_REF(msg).msg.r.len = 1;
     }
-
+printk("netconn_recv_data 6\n");
     /* don't care for the return value of lwip_netconn_do_recv */
     netconn_apimsg(lwip_netconn_do_recv, &API_MSG_VAR_REF(msg));
     API_MSG_VAR_FREE(msg);
-
+printk("netconn_recv_data 7\n");
     /* If we are closed, we indicate that we no longer wish to use the socket */
     if (buf == NULL) {
       API_EVENT(conn, NETCONN_EVT_RCVMINUS, 0);
@@ -575,15 +584,15 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
     len = netbuf_len((struct netbuf*)buf);
   }
 #endif /* (LWIP_UDP || LWIP_RAW) */
-
+printk("netconn_recv_data 8\n");
 #if LWIP_SO_RCVBUF
   SYS_ARCH_DEC(conn->recv_avail, len);
 #endif /* LWIP_SO_RCVBUF */
   /* Register event with callback */
   API_EVENT(conn, NETCONN_EVT_RCVMINUS, len);
-
+printk("netconn_recv_data 9\n");
   LWIP_DEBUGF(API_LIB_DEBUG, ("netconn_recv_data: received %p, len=%"U16_F"\n", buf, len));
-
+printk("netconn_recv_data 10\n");
   *new_buf = buf;
   /* don't set conn->last_err: it's only ERR_OK, anyway */
   return ERR_OK;
@@ -602,9 +611,9 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
 err_t
 netconn_recv_tcp_pbuf(struct netconn *conn, struct pbuf **new_buf)
 {
-  LWIP_ERROR("netconn_recv: invalid conn", (conn != NULL) &&
-             NETCONNTYPE_GROUP(netconn_type(conn)) == NETCONN_TCP, return ERR_ARG;);
-
+  //LWIP_ERROR("netconn_recv: invalid conn", (conn != NULL) &&
+    //        NETCONNTYPE_GROUP(netconn_type(conn)) == NETCONN_TCP, return ERR_ARG;);
+printk("netconn_recv_tcp_pbuf 1\n");
   return netconn_recv_data(conn, (void **)new_buf);
 }
 
@@ -739,10 +748,10 @@ netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
   err_t err;
   u8_t dontblock;
 
-  LWIP_ERROR("netconn_write: invalid conn",  (conn != NULL), return ERR_ARG;);
-  LWIP_ERROR("netconn_write: invalid conn->type",  (NETCONNTYPE_GROUP(conn->type)== NETCONN_TCP), return ERR_VAL;);
+  //LWIP_ERROR("netconn_write: invalid conn",  (conn != NULL), return ERR_ARG;);
+  //LWIP_ERROR("netconn_write: invalid conn->type",  (NETCONNTYPE_GROUP(conn->type)== NETCONN_TCP), return ERR_VAL;);
   if (size == 0) {
-    return ERR_OK;
+   // return ERR_OK;
   }
   dontblock = netconn_is_nonblocking(conn) || (apiflags & NETCONN_DONTBLOCK);
 #if LWIP_SO_SNDTIMEO
@@ -753,7 +762,7 @@ netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
   if (dontblock && !bytes_written) {
     /* This implies netconn_write() cannot be used for non-blocking send, since
        it has no way to return the number of bytes written. */
-    return ERR_VAL;
+   // return ERR_VAL;
   }
 
   API_MSG_VAR_ALLOC(msg);

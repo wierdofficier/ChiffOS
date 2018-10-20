@@ -56,48 +56,7 @@ void lfb_set_resolution(unsigned short  x, unsigned short  y) {
  */
 
 static int ioctl_vid(fs_node_t * node, int request, void * argp) {
-	/*switch (request) {
-		case IO_VID_WIDTH:
-			// Get framebuffer width  
-			validate(argp);
-			*((size_t *)argp) = lfb_resolution_x;
-			return 0;
-		case IO_VID_HEIGHT:
-			//  Get framebuffer height  
-			validate(argp);
-			*((size_t *)argp) = lfb_resolution_y;
-			return 0;
-		case IO_VID_DEPTH:
-			//  Get framebuffer bit depth  
-			validate(argp);
-			*((size_t *)argp) = lfb_resolution_b;
-			return 0;
-		case IO_VID_STRIDE:
-			//  Get framebuffer scanline stride  
-			validate(argp);
-			*((size_t *)argp) = lfb_resolution_s;
-			return 0;
-		case IO_VID_ADDR:
-			//  Get framebuffer address - TODO: map the framebuffer?  
-			validate(argp);
-			*((uintptr_t *)argp) = (uintptr_t)lfb_vid_memory;
-			return 0;
-		case IO_VID_SIGNAL:
-			//  ioctl to register for a signal (vid device change? idk) on display change 
-			display_change_recipient = getpid();
-			return 0;
-		case IO_VID_SET:
-			//   Initiate mode setting  
-			validate(argp);
-			lfb_set_resolution(((struct vid_size *)argp)->width, ((struct vid_size *)argp)->height);
-			return 0;
-		case IO_VID_DRIVER:
-			validate(argp);
-			memcpy(argp, lfb_driver_name, strlen(lfb_driver_name));
-			return 0;
-		default:
-			return -EINVAL;
-	}*/
+ 
 }
 
 /* Framebuffer device file initializer */
@@ -112,16 +71,7 @@ static fs_node_t * lfb_video_device_create(void /* TODO */) {
 	return fnode;
 }
 
-/**
- * Framebuffer fatal error presentation.
- *
- * This is called by a kernel hook to render fatal error messages
- * (panic / oops / bsod) to the graphraical framebuffer. Mostly,
- * that means the "out of memory" error. Bescause this is a fatal
- * error condition, we don't care much about speed, so we can do
- * silly things like ready from the framebuffer, which we do to
- * produce a vignetting and desaturation effect.
- */
+ 
 static int vignette_at(int x, int y) {
 	int amount = 0;
 	int level = 100;
@@ -892,7 +842,9 @@ char *strstr(const char *haystack, const char *needle) {
 	return NULL;
 }
 int xxx;
+int char_count = 0;
 extern int USING_STDIO;
+
 void puts_g(  char **text, int row, int column)
 {
 if(column != 0)
@@ -908,7 +860,7 @@ int xx = row;
 //int size = strlen(text[2]);
 	while(i < strlen(text[g])-1)
 	{
- 
+
 
 		//write_char(xx+1, yy+1, text[i++], 0x11440000);
 			 	 if(text[g][i ]== '/' && text[g][i-1]== ':' && text[g][i-2]== 'n') 
@@ -921,12 +873,13 @@ int xx = row;
 		if(g == 1)
 		{
 
-			write_char(xx, yy, text[g][i], 0xffffffff);
+			write_char(xx, yy+32, text[g][i], 0xffffffff);
+			char_count++;
 		   	char* currentDirectory;
         	   	char **haystack   = text;
 		 
   		 if(text[g][i]== '/' && text[g][i-1]== ':')
-	 			write_char(xx+16 , yy, '#', timerticks*100000);
+	 			write_char(xx+16 , yy+32, '#', timerticks*100000);
 		 
 			i++;
 		}
@@ -956,12 +909,12 @@ int xx = row;
 		uintptr_t * cell =  ((uint32_t *)lfb_vid_memory + (yy * term_width + xxx) * 12);
 	// memset((void *)(uintptr_t )lfb_vid_memory+x,0, (term_width-4) * (char_height-4) * 12);
  
-	if(yy > term_height)
+	if(yy >( term_height-8*16))
 	{
  
 		 memset((void *)(uintptr_t )lfb_vid_memory,0, (term_width-4) * (term_height-4) * 12);
 
-		yy = 0;
+		yy = 0+16*16;
 		
 	}
 
@@ -971,6 +924,7 @@ int xx = row;
 	//		}
 	//	}
 yy += char_height;
+ 
 		// term_scroll(4);
 }
  
@@ -998,12 +952,12 @@ void write_char_d(int x, int y, int val, uint32_t color) {
 		}
 	}
 }
-void puts_d(  char **text, int x, int y)
+void puts_d(  char **text, int x, int y, int color)
 {
 int i = 0;
 	while(i < strlen(text[1]) )
 	{
-		write_char_d(x  , y, text[1][i++], 1*100000);
+		write_char_d(x  , y, text[1][i++], color*10000000);
 		 x += char_width_d;
 	}
 }

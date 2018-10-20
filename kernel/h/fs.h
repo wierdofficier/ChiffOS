@@ -2,6 +2,7 @@
 #define FS_H_
 #include <errno.h>
 #include <logging.h>
+#define debug_print(level, ...) printk( __VA_ARGS__)
 #define SHM_START 0xB0000000
 #define IRQ_OFF int_disable()
 #define IRQ_RES int_resume()

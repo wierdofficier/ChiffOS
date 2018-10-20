@@ -17,10 +17,10 @@
 
 tree_t    * fs_tree = NULL; /* File system mountpoint tree */
 fs_node_t * fs_root = NULL; /* Pointer to the root mount fs_node (must be some form of filesystem, even ramdisk) */
-
+fs_node_t *kopen2(char *filename, uint32_t flags);
 hashmap_t * fs_types = NULL;
 extern int DOTASKSWITCH;
-int debug_print() { if(DOTASKSWITCH== 0) {printk(".");}}
+//int debug_print() { if(DOTASKSWITCH== 0) {printk(".");}}
 int has_permission(fs_node_t * node, int permission_bit) {
 	if (!node) return 0;
 
@@ -325,7 +325,7 @@ int create_file_fs(char *name, uint16_t permission) {
 
 	debug_print(WARNING, "creating file %s within %s (hope these strings are good)", f_path, parent_path);
 
-	parent = kopen(parent_path, 0);
+	parent = kopen2(parent_path, 0);
 	free(parent_path);
 
 	if (!parent) {
@@ -372,7 +372,7 @@ int unlink_fs(char * name) {
 
 	debug_print(WARNING, "unlinking file %s within %s (hope these strings are good)", f_path, parent_path);
 
-	parent = kopen(parent_path, 0);
+	parent = kopen2(parent_path, 0);
 	free(parent_path);
 
 	if (!parent) {
@@ -398,7 +398,7 @@ int mkdir_fs(char *name, uint16_t permission) {
 	char * parent_path = malloc(strlen(path) + 4);
 	sprintf(parent_path, "%s/..", path);
 
-	fs_node_t * this = kopen(path, 0);
+	fs_node_t * this = kopen2(path, 0);
 	int _exists = 0;
 	if (this) {
 		debug_print(WARNING, "Tried to mkdir a dir that already exists? (%s)", path);
@@ -420,7 +420,7 @@ int mkdir_fs(char *name, uint16_t permission) {
 
 	debug_print(WARNING, "creating directory %s within %s (hope these strings are good)", f_path, parent_path);
 
-	parent = kopen(parent_path, 0);
+	parent = kopen2(parent_path, 0);
 	free(parent_path);
 
 	if (!parent) {
@@ -475,7 +475,7 @@ int symlink_fs(char * target, char * name) {
 
 	debug_print(NOTICE, "creating symlink %s within %s", f_path, parent_path);
 
-	parent = kopen(parent_path, 0);
+	parent = kopen2(parent_path, 0);
 	free(parent_path);
 
 	if (!parent) {
@@ -1054,23 +1054,23 @@ char *path;
  * @returns A file system node element that the caller can free.
  */
 extern fs_node_t* fnodeGLOBAL;
-fs_node_t *kopen(char *filename, uint32_t flags) {
-	debug_print(NOTICE, "kopen(%s)", current_task->wd_name);
+fs_node_t *kopen (char *filename, uint32_t flags) {
+	debug_print(NOTICE, "kopen2(%s)", current_task->wd_name);
 
 	  kopen_recur(filename, flags, 0, (char *)(current_task->wd_name));
 	
-
  
-debug_print(NOTICE, "kopen(%s)", filename);
+ 
+debug_print(NOTICE, "kopen2(%s)", filename);
 }
 extern task_t * copytask;
 extern fs_node_t* fnodeGLOBAL;
 fs_node_t *kopen2(char *filename, uint32_t flags) {
-	debug_print(NOTICE, "kopen(%s)", current_task->wd_name);
+	debug_print(NOTICE, "kopen2(%s)", current_task->wd_name);
 
 	return  kopen_recur(filename, flags, 0, (char *)(current_task->wd_name));
 	 
  
-debug_print(NOTICE, "kopen(%s)", filename);
+debug_print(NOTICE, "kopen2(%s)", filename);
 }
 

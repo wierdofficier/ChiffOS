@@ -1627,7 +1627,7 @@ fs_node_t * ext2_fs_mount(char * device, char * mount_path) {
 	char * arg = strdup(device);
 	char * argv[10];
 
-	int argc =1;// tokenize(arg, ",", argv);
+	int argc =  tokenize(arg, ",", argv);
 
 	fs_node_t * dev = kopen(argv[0], 0);
 

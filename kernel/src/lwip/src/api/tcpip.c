@@ -335,18 +335,23 @@ tcpip_untimeout(sys_timeout_handler h, void *arg)
 err_t
 tcpip_send_msg_wait_sem(tcpip_callback_fn fn, void *apimsg, sys_sem_t* sem)
 {
+printk("tcpip_send_msg_wait_sem \n");
 #if LWIP_TCPIP_CORE_LOCKING
+printk("tcpip_send_msg_wait_sem123 \n");
   LWIP_UNUSED_ARG(sem);
   LOCK_TCPIP_CORE();
+printk("tcpip_send_msg_wait_sem \n");
   fn(apimsg);
+printk("tcpip_send_msg_wait_sem \n");
   UNLOCK_TCPIP_CORE();
   return ERR_OK;
 #else /* LWIP_TCPIP_CORE_LOCKING */
+printk("tcpip_send_msg_wait_sem 321\n");
   TCPIP_MSG_VAR_DECLARE(msg);
-
+printk("tcpip_send_msg_wait_sem \n");
   LWIP_ASSERT("semaphore not initialized", sys_sem_valid(sem));
   LWIP_ASSERT("Invalid mbox", sys_mbox_valid_val(mbox));
-
+printk("tcpip_send_msg_wait_sem \n");
   TCPIP_MSG_VAR_ALLOC(msg);
   TCPIP_MSG_VAR_REF(msg).type = TCPIP_MSG_API;
   TCPIP_MSG_VAR_REF(msg).msg.api_msg.function = fn;

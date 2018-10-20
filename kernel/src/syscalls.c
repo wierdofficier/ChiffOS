@@ -330,8 +330,7 @@ static int sys_fswait_timeout(int c, int fds[], int timeout) {
 
   int sys_write(int fd, char * ptr, int len) {
   printk("%s",ptr );
-	if (FD_CHECK(fd)) {
-		PTR_VALIDATE(ptr);
+ ;
 		fs_node_t * node = FD_ENTRY(fd);
 		if (!has_permission(node, 02)) {
 			debug_print(WARNING, "access denied (write, fd=%d)", fd);
@@ -341,8 +340,7 @@ static int sys_fswait_timeout(int c, int fds[], int timeout) {
 		//printk("%s\n",(uint8_t *)ptr); //ändring
 		node->offset += out;
 		return out;
-	}
-	return -1;
+ 
 }
   int sys_access(const char * file, int flags) {
 	PTR_VALIDATE(file);
@@ -483,7 +481,7 @@ int n = char_width*2;
 
 		if (c >= ' ' ) {
 			n+=char_width;
-			write_char(xxx+n, yy-char_height, c, 0x00ffff00);
+			write_char(xxx+n, yy-char_height+32, c, 0x00ffff00);
 			 
 			
 			  if(c == 'n')
@@ -498,7 +496,7 @@ int n = char_width*2;
 		}
 		else if (c == '\b') {
 			if (p > (char *)buf) {
-			write_char(xxx+n, yy-char_height, ' ', 0);
+			write_char(xxx+n, yy-char_height+32 , ' ', 0);
 				p--;
 				n+=char_width;
 			//	write_char(xxx+n, yy-char_height, c, 0x11ffff00);
@@ -690,6 +688,26 @@ static int sys_execve(const char * filename, char *const argv[], char *const env
 	exec((char *)filename, argc, (char **)argv_, (char **)envp_);
 	return -1;
 }
+uint32_t process_move_fd(task_t * proc, int src, int dest) {
+	if ((size_t)src > proc->fds->length || (dest != -1 && (size_t)dest > proc->fds->length)) {
+		return -1;
+	}
+	if (dest == -1) {
+		dest = process_append_fd(proc, NULL);
+	}
+	if (proc->fds->entries[dest] != proc->fds->entries[src]) {
+		close_fs(proc->fds->entries[dest]);
+		proc->fds->entries[dest] = proc->fds->entries[src];
+		open_fs(proc->fds->entries[dest], 0);
+	}
+	return dest;
+}
+ 
+  int sys_dup2(int old, int new) {
+	return process_move_fd((task_t *)current_task, old, new);
+}
+ 
+
  typedef unsigned int socklen_t;
  int getsockname(int s, struct sockaddr *name, socklen_t *namelen);
 int gettimeofday(struct timeval *p, void *z);
@@ -702,6 +720,7 @@ int connect(int s, const struct sockaddr *name, socklen_t namelen);
 int recv(int s, void *mem, size_t len, int flags);
 int recvfrom(int s, void *mem, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen);
 int send(int s, const void *dataptr, size_t size, int flags);
+
 int sendto(int s, const void *dataptr, size_t size, int flags, const struct sockaddr *to, socklen_t tolen);
 int socket(int domain, int type, int protocol);
 int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
@@ -713,6 +732,12 @@ unsigned int ipaddr_addr(const char *cp);
 void kexit(int retval);
 void * sbrk(uintptr_t increment);
 struct hostent *gethostbyname(const char* name);
+udelay( int seconds );
+extern int mkdir_fs(char *name, uint16_t permission);
+
+  int sys_mkdir(char * path, uint32_t mode) {
+	return mkdir_fs(path, mode);
+}
  void* syscalls[] =
 {
 &kexit,			//0
@@ -737,7 +762,7 @@ struct hostent *gethostbyname(const char* name);
 &nop,
 &nop, 			//20
 &nop,
-&nop,
+&sys_dup2,
 &sys_getuid,
 &nop,
 &nop,	//25
@@ -749,11 +774,11 @@ struct hostent *gethostbyname(const char* name);
 &nop,
 &nop,			//32
 &nop,
-&nop,
+&sys_mkdir,
 &nop,
 &nop,
 &sys_kill,
-&sys_signal,
+&nop,
 &nop,
 &nop,			//40
 &nop,
@@ -761,19 +786,19 @@ struct hostent *gethostbyname(const char* name);
 &nop,
 &nop,
 &nop,
-&sleep2,
+&udelay,
 &sys_ioctl,
 &sys_access,
 &sys_stat,
 &nop,
-&nop,
+&sys_umask,
 &nop,
 &sys_waitpid,
 &sys_pipe, 		//54
 &nop,
 &nop,
 &nop,
-&nop,			
+&sys_stat,			
 &nop,
 &nop,
 &ipaddr_addr,
@@ -801,7 +826,7 @@ struct hostent *gethostbyname(const char* name);
  
 void syscall_handler(struct regs *r)
 {
-	//     printk("regs nr: %d\n",r->eax);
+	      printk("regs nr: %d\n",r->eax);
 
 	    if (r->eax >= sizeof(syscalls)/sizeof(*syscalls))
 		return;

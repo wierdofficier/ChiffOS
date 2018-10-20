@@ -783,7 +783,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
   if (!sock) {
     return -1;
   }
-
+printk("lwip_recvfrom1 \n");
   do {
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom: top while sock->lastdata=%p\n", sock->lastdata));
     /* Check if there is data left from the last recv operation. */
@@ -798,11 +798,13 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           sock_set_errno(sock, 0);
           return off;
         }
+printk("lwip_recvfrom1 2\n");
         LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d): returning EWOULDBLOCK\n", s));
         set_errno(EWOULDBLOCK);
+printk("lwip_recvfrom1 2\n");
         return -1;
       }
-
+printk("lwip_recvfrom1 3\n");
       /* No data was left from the previous operation, so we try to get
          some from the network. */
       if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_TCP) {
@@ -810,23 +812,29 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
       } else {
         err = netconn_recv(sock->conn, (struct netbuf **)&buf);
       }
+printk("lwip_recvfrom1 4\n");
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom: netconn_recv err=%d, netbuf=%p\n",
         err, buf));
-
+printk("lwip_recvfrom1 5\n");
       if (err != ERR_OK) {
+printk("lwip_recvfrom1 6\n");
         if (off > 0) {
           if (err == ERR_CLSD) {
             /* closed but already received data, ensure select gets the FIN, too */
             event_callback(sock->conn, NETCONN_EVT_RCVPLUS, 0);
           }
+printk("lwip_recvfrom1 7\n");
           /* already received data, return that */
           sock_set_errno(sock, 0);
           return off;
         }
+printk("lwip_recvfrom1 8\n");
         /* We should really do some error checking here. */
-        LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d): buf == NULL, error is \"%s\"!\n",
-          s, lwip_strerr(err)));
-        sock_set_errno(sock, err_to_errno(err));
+    //    LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d): buf == NULL, error is \"%s\"!\n",
+     //     s, lwip_strerr(err)));
+      //  sock_set_errno(sock, err_to_errno(err));
+printk("lwip_recvfrom1 9\n");
+	return 0;
         if (err == ERR_CLSD) {
           return 0;
         } else {
@@ -836,16 +844,17 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
       LWIP_ASSERT("buf != NULL", buf != NULL);
       sock->lastdata = buf;
     }
-
+printk("lwip_recvfrom1 10\n");
     if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_TCP) {
       p = (struct pbuf *)buf;
     } else {
       p = ((struct netbuf *)buf)->p;
     }
+printk("lwip_recvfrom1 11\n");
     buflen = p->tot_len;
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom: buflen=%"U16_F" len=%"SZT_F" off=%d sock->lastoffset=%"U16_F"\n",
       buflen, len, off, sock->lastoffset));
-
+printk("lwip_recvfrom1 12\n");
     buflen -= sock->lastoffset;
 
     if (len > buflen) {
@@ -856,8 +865,9 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
 
     /* copy the contents of the received buffer into
     the supplied memory pointer mem */
+printk("lwip_recvfrom1 13\n");
     pbuf_copy_partial(p, (u8_t*)mem + off, copylen, sock->lastoffset);
-
+printk("lwip_recvfrom1 14\n");
     off += copylen;
 
     if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_TCP) {
@@ -872,7 +882,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
     } else {
       done = 1;
     }
-
+printk("lwip_recvfrom1 15\n");
     /* Check to see from where the data was.*/
     if (done) {
 #if !SOCKETS_DEBUG
@@ -891,7 +901,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           port = netbuf_fromport((struct netbuf *)buf);
           fromaddr = netbuf_fromaddr((struct netbuf *)buf);
         }
-
+printk("lwip_recvfrom1 16\n");
 #if LWIP_IPV4 && LWIP_IPV6
         /* Dual-stack: Map IPv4 addresses to IPv4 mapped IPv6 */
         if (NETCONNTYPE_ISIPV6(netconn_type(sock->conn)) && IP_IS_V4(fromaddr)) {
@@ -914,7 +924,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
         }
       }
     }
-
+printk("lwip_recvfrom1 17\n");
     /* If we don't peek the incoming message... */
     if ((flags & MSG_PEEK) == 0) {
       /* If this is a TCP socket, check if there is data left in the
@@ -937,7 +947,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
       }
     }
   } while (!done);
-
+printk("lwip_recvfrom1 18\n");
   sock_set_errno(sock, 0);
   return off;
 }
@@ -961,15 +971,15 @@ lwip_send(int s, const void *data, size_t size, int flags)
   err_t err;
   u8_t write_flags;
   size_t written;
-
+printk("lwip_send 1\n");
   LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_send(%d, data=%p, size=%"SZT_F", flags=0x%x)\n",
                               s, data, size, flags));
-
+printk("lwip_send 2\n");
   sock = get_socket(s);
   if (!sock) {
     return -1;
   }
-
+printk("lwip_send 3\n");
   if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) != NETCONN_TCP) {
 #if (LWIP_UDP || LWIP_RAW)
     return lwip_sendto(s, data, size, flags, NULL, 0);
@@ -978,15 +988,18 @@ lwip_send(int s, const void *data, size_t size, int flags)
     return -1;
 #endif /* (LWIP_UDP || LWIP_RAW) */
   }
-
+printk("lwip_send 4\n");
   write_flags = NETCONN_COPY |
     ((flags & MSG_MORE)     ? NETCONN_MORE      : 0) |
     ((flags & MSG_DONTWAIT) ? NETCONN_DONTBLOCK : 0);
   written = 0;
+printk("lwip_send 5\n");
   err = netconn_write_partly(sock->conn, data, size, write_flags, &written);
-
+printk("lwip_send 6\n");
   LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_send(%d) err=%d written=%"SZT_F"\n", s, err, written));
-  sock_set_errno(sock, err_to_errno(err));
+printk("lwip_send 7\n");  
+return written;
+sock_set_errno(sock, err_to_errno(err));
   return (err == ERR_OK ? (int)written : -1);
 }
 
